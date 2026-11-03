@@ -1,0 +1,114 @@
+[
+ {
+  "file": "biologie.md",
+  "titel": "Kriterien zur mündlichen Notengebung im Fach Biologie",
+  "fach": "Biologie",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "chemie.md",
+  "titel": "Kriterienraster/Bewertungshilfe für mündliche Noten im Fach Chemie",
+  "fach": "Chemie",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "summe"
+ },
+ {
+  "file": "deutsch.md",
+  "titel": "Mündliche Noten",
+  "fach": "Deutsch",
+  "klassen": "5-12",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "englisch-kl5-ankreuzbogen.md",
+  "titel": "Kriterien zur mündlichen Note im Fach Englisch für Schüler*innen",
+  "fach": "Englisch",
+  "klassen": "5",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "englisch-kl5-bewertungsbogen.md",
+  "titel": "Bewertungsbogen Mündliche Leistungen im Fach Englisch",
+  "fach": "Englisch",
+  "klassen": "5",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "ethik.md",
+  "titel": "Kriterienkatalog für mündliche Noten im Fach Ethik",
+  "fach": "Ethik",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "franzoesisch.md",
+  "titel": "Bewertungsbogen Mündliche Leistungen in den modernen Fremdsprachen",
+  "fach": "Französisch",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "geographie.md",
+  "titel": "Mündliche Note im Fach Geographie (Klassenstufe 5-12)",
+  "fach": "Geographie",
+  "klassen": "5-12",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "geschichte.md",
+  "titel": "Kriterien der Unterrichtsnote im Fach Geschichte",
+  "fach": "Geschichte",
+  "klassen": "",
+  "typ": "matrix",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "kunst.md",
+  "titel": "Rastermodell für Lehrkräfte und Lernende",
+  "fach": "Bildende Kunst",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "summe"
+ },
+ {
+  "file": "latein.md",
+  "titel": "Latein: Kriterien für die Bewertung der mündlichen Leistung im Unterricht",
+  "fach": "Latein",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "musik.md",
+  "titel": "Kriterien zur mündlichen Leistungsmessung im Fach Musik 2026/27",
+  "fach": "Musik",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "religion.md",
+  "titel": "Mündliche Leistungsmessung Religionslehre",
+  "fach": "Religionslehre",
+  "klassen": "",
+  "typ": "matrix",
+  "wertung": "mittelwert"
+ },
+ {
+  "file": "spanisch.md",
+  "titel": "Bewertungsbogen Mündliche Leistungen im Fach Spanisch",
+  "fach": "Spanisch",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ }
+]
