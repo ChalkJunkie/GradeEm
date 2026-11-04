@@ -1,6 +1,6 @@
 ---
 format: gradeem-raster/1
-name: Spanisch EE26
+name: Spanisch (ee26)
 titel: Bewertungsbogen Mündliche Leistungen im Fach Spanisch
 fach: Spanisch
 quelle: Mündliche_Note_Spanisch.pdf (wortgleich mit Kriterienraster_Französisch.docx)

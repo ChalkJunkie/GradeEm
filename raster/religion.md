@@ -1,6 +1,6 @@
 ---
 format: gradeem-raster/1
-name: Religionslehre EE26
+name: Religion (ee26)
 typ: matrix
 titel: Mündliche Leistungsmessung Religionslehre
 untertitel: Fachschaft Evang. Religionslehre/ Islam. Religionslehre/ Kath. Religionslehre / Syr.-orth. Religionslehre

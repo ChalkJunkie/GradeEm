@@ -1,6 +1,6 @@
 ---
 format: gradeem-raster/1
-name: Deutsch EE26
+name: Deutsch (ee26)
 titel: Mündliche Noten
 fach: Deutsch
 klassen: 5-12

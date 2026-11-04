@@ -16,7 +16,7 @@ const near = (a, b) => Math.abs(a - b) < 1e-9;
 const sel = (...arr) => arr.map((s) => ({ sel: Array.isArray(s) ? s : s === null ? [] : [s], pts: {}, comment: '' }));
 
 test('alle mitgelieferten Raster lassen sich fehlerfrei einlesen', () => {
-  assert.equal(files.length, 14);
+  assert.equal(files.length, 15);
   for (const f of files) {
     const p = load(f);
     assert.deepEqual(p.errors, [], `${f}: ${p.errors.join('; ')}`);
@@ -138,8 +138,27 @@ test('eingebautes Rasterpaket entspricht dem Ordner raster/ und hat Anzeigenamen
   assert.deepEqual(Object.keys(BUILTIN_RASTER).sort(), [...files].sort());
   for (const f of files) assert.equal(BUILTIN_RASTER[f], readFileSync(new URL(f, DIR), 'utf8'), f);
   for (const e of BUILTIN_INDEX) {
-    assert.match(e.name, /EE26/, e.file);
+    assert.match(e.name, /\(ee26\)$/, e.file);
     assert.equal(parseRaster(BUILTIN_RASTER[e.file]).raster.meta.name, e.name);
   }
   assert.equal(new Set(BUILTIN_INDEX.map((e) => e.name)).size, BUILTIN_INDEX.length, 'Namen eindeutig');
+});
+
+test('Kriterium aufteilen: Vorschlag, Zuordnung und unveränderte Gewichtsanteile', async () => {
+  const { suggestParts, autoAssign, applySplit } = await import('../js/raster-ui.js');
+  const r = load('englisch.md').raster;
+  const k = r.kriterien[2];
+  const parts = suggestParts(k);
+  assert.deepEqual(parts, ['Wortschatz', 'Grammatik', 'Aussprache']);
+  assert.deepEqual(autoAssign('Gebrauch von Grammatik/Syntax und Lexik', parts), [true, true, false]);
+  assert.deepEqual(autoAssign('Aussprache überwiegend unverständlich', parts), [false, false, true]);
+  assert.equal(autoAssign('erfüllt die gestellten Aufgaben', parts), null);
+  const assign = r.stufen.map((_, si) => cellParas(k.cells[si]).map((p) => autoAssign(p.text, parts) || parts.map(() => true)));
+  const crit = (n, ki) => Array.from({ length: n }, (_, i) => ({ sel: [i >= ki ? 2 : 0], pts: {} }));
+  const before = evaluateRaster(r, { crit: crit(3, 2) }).proposal;
+  applySplit(r, 2, parts, assign);
+  assert.deepEqual(r.kriterien.map((x) => x.gewicht), [3, 3, 1, 1, 1]);
+  assert.ok(near(evaluateRaster(r, { crit: crit(5, 2) }).proposal, before));
+  assert.match(r.kriterien[4].cells[5], /Aussprache überwiegend unverständlich/);
+  assert.deepEqual(parseRaster(serializeRaster(r)).errors, []);
 });

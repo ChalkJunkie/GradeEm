@@ -1,6 +1,6 @@
 ---
 format: gradeem-raster/1
-name: Chemie EE26
+name: Chemie (ee26)
 titel: Kriterienraster/Bewertungshilfe für mündliche Noten im Fach Chemie
 fach: Chemie
 quelle: Kriterienraster_mdl__Noten_Chemie.docx

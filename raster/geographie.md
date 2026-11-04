@@ -1,6 +1,6 @@
 ---
 format: gradeem-raster/1
-name: Geographie EE26
+name: Geographie (ee26)
 titel: Mündliche Note im Fach Geographie (Klassenstufe 5-12)
 fach: Geographie
 klassen: 5-12

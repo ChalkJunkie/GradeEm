@@ -1,7 +1,7 @@
 [
  {
   "file": "biologie.md",
-  "name": "Biologie EE26",
+  "name": "Biologie (ee26)",
   "titel": "Kriterien zur mündlichen Notengebung im Fach Biologie",
   "fach": "Biologie",
   "klassen": "",
@@ -10,7 +10,7 @@
  },
  {
   "file": "chemie.md",
-  "name": "Chemie EE26",
+  "name": "Chemie (ee26)",
   "titel": "Kriterienraster/Bewertungshilfe für mündliche Noten im Fach Chemie",
   "fach": "Chemie",
   "klassen": "",
@@ -19,7 +19,7 @@
  },
  {
   "file": "deutsch.md",
-  "name": "Deutsch EE26",
+  "name": "Deutsch (ee26)",
   "titel": "Mündliche Noten",
   "fach": "Deutsch",
   "klassen": "5-12",
@@ -27,26 +27,26 @@
   "wertung": "mittelwert"
  },
  {
-  "file": "englisch-kl5-ankreuzbogen.md",
-  "name": "Englisch EE26 (Kl. 5, Ankreuzbogen)",
-  "titel": "Kriterien zur mündlichen Note im Fach Englisch für Schüler*innen",
+  "file": "englisch-kl5-bewertungsbogen.md",
+  "name": "Englisch 5/6 (ee26)",
+  "titel": "Bewertungsbogen Mündliche Leistungen im Fach Englisch",
   "fach": "Englisch",
-  "klassen": "5",
+  "klassen": "5/6",
   "typ": "kriterien",
   "wertung": "mittelwert"
  },
  {
-  "file": "englisch-kl5-bewertungsbogen.md",
-  "name": "Englisch EE26 (Kl. 5, Bewertungsbogen)",
-  "titel": "Bewertungsbogen Mündliche Leistungen im Fach Englisch",
+  "file": "englisch.md",
+  "name": "Englisch (ee26)",
+  "titel": "Bewertungsbogen Mündliche Leistungen in den modernen Fremdsprachen",
   "fach": "Englisch",
-  "klassen": "5",
+  "klassen": "",
   "typ": "kriterien",
   "wertung": "mittelwert"
  },
  {
   "file": "ethik.md",
-  "name": "Ethik EE26",
+  "name": "Ethik (ee26)",
   "titel": "Kriterienkatalog für mündliche Noten im Fach Ethik",
   "fach": "Ethik",
   "klassen": "",
@@ -55,7 +55,7 @@
  },
  {
   "file": "franzoesisch.md",
-  "name": "Französisch EE26",
+  "name": "Französisch (ee26)",
   "titel": "Bewertungsbogen Mündliche Leistungen in den modernen Fremdsprachen",
   "fach": "Französisch",
   "klassen": "",
@@ -64,7 +64,7 @@
  },
  {
   "file": "geographie.md",
-  "name": "Geographie EE26",
+  "name": "Geographie (ee26)",
   "titel": "Mündliche Note im Fach Geographie (Klassenstufe 5-12)",
   "fach": "Geographie",
   "klassen": "5-12",
@@ -73,7 +73,7 @@
  },
  {
   "file": "geschichte.md",
-  "name": "Geschichte EE26",
+  "name": "Geschichte (ee26)",
   "titel": "Kriterien der Unterrichtsnote im Fach Geschichte",
   "fach": "Geschichte",
   "klassen": "",
@@ -82,7 +82,7 @@
  },
  {
   "file": "kunst.md",
-  "name": "Bildende Kunst EE26",
+  "name": "Kunst (ee26)",
   "titel": "Rastermodell für Lehrkräfte und Lernende",
   "fach": "Bildende Kunst",
   "klassen": "",
@@ -91,7 +91,7 @@
  },
  {
   "file": "latein.md",
-  "name": "Latein EE26",
+  "name": "Latein (ee26)",
   "titel": "Latein: Kriterien für die Bewertung der mündlichen Leistung im Unterricht",
   "fach": "Latein",
   "klassen": "",
@@ -100,7 +100,7 @@
  },
  {
   "file": "musik.md",
-  "name": "Musik EE26",
+  "name": "Musik (ee26)",
   "titel": "Kriterien zur mündlichen Leistungsmessung im Fach Musik 2026/27",
   "fach": "Musik",
   "klassen": "",
@@ -108,8 +108,17 @@
   "wertung": "mittelwert"
  },
  {
+  "file": "physik.md",
+  "name": "Physik (ee26)",
+  "titel": "Kriterienraster/Bewertungshilfe für mündliche Noten im Fach Physik",
+  "fach": "Physik",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "summe"
+ },
+ {
   "file": "religion.md",
-  "name": "Religionslehre EE26",
+  "name": "Religion (ee26)",
   "titel": "Mündliche Leistungsmessung Religionslehre",
   "fach": "Religionslehre",
   "klassen": "",
@@ -118,7 +127,7 @@
  },
  {
   "file": "spanisch.md",
-  "name": "Spanisch EE26",
+  "name": "Spanisch (ee26)",
   "titel": "Bewertungsbogen Mündliche Leistungen im Fach Spanisch",
   "fach": "Spanisch",
   "klassen": "",

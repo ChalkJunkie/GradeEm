@@ -19,7 +19,7 @@ import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD, BUILTIN_INDEX, BUILTIN_RASTER 
 import { renderRate, studentGrid as gridOf } from './rate-view.js';
 import { renderRasterLibrary, renderRasterView, renderRasterEditor, rasterSelect } from './raster-ui.js';
 
-export const APP_VERSION = '1.3.1';
+export const APP_VERSION = '1.4.0';
 export const APP_NAME = 'Grade’Em';
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de';
 
@@ -433,7 +433,7 @@ async function render() {
       const g = getGroup(b);
       if (!g) return go('', { replace: true });
       if (!c) return await renderGroup(g);
-      if (c === 'namen') return renderGroupEdit(g);
+      if (c === 'namen') return renderGroupEdit(g, d);
       if (c === 'export') return await renderExport(g);
       if (c === 'bewerten' && d) return await renderRate(ctx, g, d);
     }
@@ -632,7 +632,8 @@ async function renderGroup(g) {
         if (t) { r.title = t; await saveRound(r); render(); }
       } }, icon('edit')),
       rounds.length > 1 ? h('button', { class: 'btn btn--icon btn--danger', type: 'button', 'aria-label': 'Runde löschen', onclick: () => deleteRound(g, r) }, icon('trash')) : null),
-    h('p', { class: 'muted small', style: { margin: '-6px 0 14px' } }, 'Raster dieser Runde: ', h('a', { href: `#/raster/ansehen/${encodeURIComponent(r.rasterId)}` }, roundLabel(r))),
+    h('p', { class: 'muted small', style: { margin: '-6px 0 14px' } }, 'Raster dieser Runde: ', h('a', { href: `#/raster/ansehen/${encodeURIComponent(r.rasterId)}` }, roundLabel(r)), ' · ',
+      h('a', { href: `#/gruppe/${g.id}/namen/raster` }, 'ändern')),
   );
 
   if (!students.length) {
@@ -659,7 +660,7 @@ async function renderGroup(g) {
     title: g.name,
     subtitle: `${g.klasse ? `Klasse ${g.klasse} · ` : ''}${countLabel(students.length)} · ${roundLabel(r)} · ${SCALE_LABELS[displayScale(g)]}`,
     actions: [
-      h('a', { class: 'btn', href: `#/gruppe/${g.id}/namen` }, icon('users'), h('span', null, 'Lerngruppe')),
+      h('a', { class: 'btn', href: `#/gruppe/${g.id}/namen` }, icon('gear'), h('span', null, 'Einstellungen')),
       h('a', { class: 'btn btn--primary', href: `#/gruppe/${g.id}/export` }, icon('share'), h('span', null, 'Export')),
     ],
   }), main);
@@ -688,7 +689,7 @@ async function deleteRound(g, r) {
 // Lerngruppe bearbeiten: Namen
 // ===========================================================================
 
-function renderGroupEdit(g) {
+function renderGroupEdit(g, focus) {
   document.title = `Namen – ${g.name}`;
   let mode = 'single';
 
@@ -791,10 +792,14 @@ function renderGroupEdit(g) {
 
   view(topbar({
     back: `#/gruppe/${g.id}`,
-    title: 'Lerngruppe',
+    title: 'Einstellungen der Lerngruppe',
     subtitle: g.name,
     actions: [h('a', { class: 'btn btn--primary', href: `#/gruppe/${g.id}` }, 'Fertig')],
   }), main);
+  if (focus === 'raster') {
+    const sec = document.getElementById('raster-section');
+    if (sec) requestAnimationFrame(() => sec.scrollIntoView({ block: 'start' }));
+  }
 }
 
 function rasterPanel(g) {
@@ -866,7 +871,7 @@ function rasterPanel(g) {
     } }, u.titel || `Umrechnung ${i + 1}`)));
     parts.push(h('h2', { style: { marginTop: '18px' } }, 'Umrechnung der Punktsumme'), seg);
   }
-  return h('section', { class: 'section panel' }, parts);
+  return h('section', { class: 'section panel', id: 'raster-section' }, parts);
 }
 
 async function changeRaster(g, id, sel) {
@@ -1251,7 +1256,7 @@ async function renderExport(g) {
           h('button', { class: 'btn', type: 'button', onclick: () => setAll([]) }, 'Keine'))),
       pick),
     h('p', { class: 'muted small' }, `Raster: ${roundLabel(r)}. Noten erscheinen in ${scaleName} – einstellbar für diese Lerngruppe unter `,
-      h('a', { href: `#/gruppe/${g.id}/namen` }, 'Lerngruppe'), `. Runde: ${r.title}.`),
+      h('a', { href: `#/gruppe/${g.id}/namen` }, 'Einstellungen der Lerngruppe'), `. Runde: ${r.title}.`),
     h('div', { class: 'export-grid' },
       h('section', { class: 'panel export-card' },
         h('h3', null, 'Notenliste'),
@@ -1328,7 +1333,7 @@ function renderSettings() {
       h('label', { class: 'field' }, h('span', null, 'Standardraster für neue Lerngruppen'), defSel)),
     h('section', { class: 'section panel' },
       h('h2', null, 'Notenskala für neue Lerngruppen'),
-      h('p', { class: 'muted small', style: { marginTop: 0 } }, 'Jede Lerngruppe hat ihre eigene Skala – einstellbar beim Anlegen und unter „Lerngruppe“. Hier legst du fest, womit neue Lerngruppen starten.'),
+      h('p', { class: 'muted small', style: { marginTop: 0 } }, 'Jede Lerngruppe hat ihre eigene Skala – einstellbar beim Anlegen und in den Einstellungen der Lerngruppe. Hier legst du fest, womit neue Lerngruppen starten.'),
       scaleControls(S, () => saveSettings()),
       h('p', { class: 'muted small' }, 'Viertelnoten: 1 / 1- / 1-2 / 2+ / 2 … Notenpunkte: 17 − 3 × Note, gerundet (15 P ≙ 1+, 14 P ≙ 1, 13 P ≙ 1- …). Exakte Mitten werden zugunsten des Schülis gerundet.')),
     h('section', { class: 'section panel' },

@@ -1,6 +1,6 @@
 ---
 format: gradeem-raster/1
-name: Ethik EE26
+name: Ethik (ee26)
 titel: Kriterienkatalog für mündliche Noten im Fach Ethik
 fach: Ethik
 quelle: Ethik_Einschätzungsraster_Gesamt.docx

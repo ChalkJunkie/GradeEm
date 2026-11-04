@@ -9,7 +9,7 @@ Am einfachsten erstellst du eine neue Datei mit einer KI. Die Anleitung dazu ste
 ```
 ---
 format: gradeem-raster/1
-name: Chemie EE26
+name: Chemie (ee26)
 titel: Kriterien zur mündlichen Notengebung im Fach Chemie
 fach: Chemie
 ---
@@ -47,7 +47,7 @@ Eine Angabe pro Zeile, immer `Name: Wert`.
 | Angabe | Pflicht | Bedeutung |
 |---|---|---|
 | `format` | ja | immer `gradeem-raster/1` |
-| `name` | | Name des Rasters in der App (Auswahllisten), z. B. `Chemie EE26`. Ohne Angabe: Fach und Titel |
+| `name` | | Name des Rasters in der App (Auswahllisten), z. B. `Chemie (ee26)`. Ohne Angabe: Fach und Titel |
 | `titel` | ja | Überschrift des Rasters auf dem Bogen |
 | `fach` | ja | Fach, z. B. für die Auswahlliste und die Notenliste |
 | `typ` | | `kriterien` (Standard) oder `matrix` (siehe unten) |

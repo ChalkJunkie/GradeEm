@@ -60,9 +60,9 @@ Alle Daten liegen nur im Speicher dieser App auf dem iPad. Wird die App gelösch
 
 **Lerngruppe anlegen** – Name (z. B. „Bio 8b“), Klasse (erscheint auf Schülibogen und Notenliste), **Bewertungsraster** und **Notenskala**. Mit **Beispielgruppe ausprobieren** kannst du alles gefahrlos testen und die Gruppe danach löschen.
 
-**Bewertungsraster pro Lerngruppe** – Beim Anlegen und jederzeit unter **Lerngruppe** wählst du ein Fachschaftsraster oder ein eigenes Raster. Jede Bewertungsrunde merkt sich die genaue Fassung ihres Rasters: Ändert sich ein Raster später (neue Fachschaftsfassung oder eigene Bearbeitung), bleiben bestehende Noten und Bögen unverändert. Ein neues Raster gilt sofort, solange die aktuelle Runde noch keine Bewertungen hat, sonst ab der nächsten Runde. Ebenfalls unter **Lerngruppe**: die **Gewichtung** der Kriterien (bei Raster mit Mittelwert) und die **Umrechnung** (bei Punkte-Rastern mit mehreren Umrechnungstabellen, z. B. Kunst „Klasse 5-10“ / „Kursstufe“).
+**Bewertungsraster pro Lerngruppe** – Beim Anlegen und jederzeit über **Einstellungen** in der Lerngruppe (oder den Link „ändern“ neben „Raster dieser Runde“) wählst du ein Fachschaftsraster oder ein eigenes Raster. Jede Bewertungsrunde merkt sich die genaue Fassung ihres Rasters: Ändert sich ein Raster später (neue Fachschaftsfassung oder eigene Bearbeitung), bleiben bestehende Noten und Bögen unverändert. Ein neues Raster gilt sofort, solange die aktuelle Runde noch keine Bewertungen hat, sonst ab der nächsten Runde. Ebenfalls in den **Einstellungen der Lerngruppe**: die **Gewichtung** der Kriterien (bei Raster mit Mittelwert) und die **Umrechnung** (bei Punkte-Rastern mit mehreren Umrechnungstabellen, z. B. Kunst „Klasse 5-10“ / „Kursstufe“).
 
-**Notenskala pro Lerngruppe** – Jede Lerngruppe hat ihre eigene Skala: **Viertelnoten**, **Notenpunkte** oder **beides** (dann zusätzlich wählbar, ob in Viertelnoten- oder Punkteschritten nachgeschärft wird). So kann z. B. „Bio 8b“ mit Viertelnoten und „Bio J1“ mit Notenpunkten arbeiten. Die Skala legst du beim Anlegen fest und änderst sie jederzeit unter **Lerngruppe**. Sie gilt für Anzeige, Nachschärfen, Notenliste und Schülibögen dieser Gruppe. Nachgeschärfte Endnoten bleiben bei einem Wechsel erhalten und werden umgerechnet. In den **Einstellungen** bestimmst du nur, mit welcher Skala neue Lerngruppen starten.
+**Notenskala pro Lerngruppe** – Jede Lerngruppe hat ihre eigene Skala: **Viertelnoten**, **Notenpunkte** oder **beides** (dann zusätzlich wählbar, ob in Viertelnoten- oder Punkteschritten nachgeschärft wird). So kann z. B. „Bio 8b“ mit Viertelnoten und „Bio J1“ mit Notenpunkten arbeiten. Die Skala legst du beim Anlegen fest und änderst sie jederzeit in den **Einstellungen** der Lerngruppe. Sie gilt für Anzeige, Nachschärfen, Notenliste und Schülibögen dieser Gruppe. Nachgeschärfte Endnoten bleiben bei einem Wechsel erhalten und werden umgerechnet. In den **Einstellungen** bestimmst du nur, mit welcher Skala neue Lerngruppen starten.
 
 **Namen eintragen** – drei Wege, beliebig kombinierbar; doppelte Namen werden erkannt:
 
@@ -98,19 +98,20 @@ Alle Daten liegen nur im Speicher dieser App auf dem iPad. Wird die App gelösch
 - **Ansehen:** zeigt das komplette Raster.
 - **Als eigenes bearbeiten:** legt eine eigene Fassung eines Fachschaftsrasters an, die du frei ändern kannst.
 - **Raster importieren:** Rasterdatei einfügen oder als `.md`-Datei wählen. Am einfachsten mit einer KI: **KI-Prompt kopieren**, zusammen mit dem Original (PDF, Word, Foto) an einen KI-Assistenten geben, die Antwort komplett einfügen. Die App prüft sofort und zeigt Fehler verständlich an.
-- **Editor:** Formular für Kriterien-Raster (Titel, Stufen, Kriterien, Beschreibungen, Gewichte, Umrechnung, Texte) und eine Textansicht für alles, auch Matrix-Raster. „Vorschau“ zeigt das Ergebnis.
+- **Editor:** Formular für Kriterien-Raster (Titel, Stufen, Kriterien, Beschreibungen, Gewichte, Umrechnung, Texte) und eine Textansicht für alles, auch Matrix-Raster. „Vorschau“ zeigt das Ergebnis. **Rückgängig** und **Wiederholen** nehmen mehrere Schritte zurück bzw. wieder vor, solange der Editor offen ist.
+- **Kriterien verschieben, kopieren, aufteilen:** Jedes Kriterium hat die Knöpfe „Nach oben“, „Nach unten“, „Kopieren“ und „Aufteilen …“. Aufteilen zerlegt ein Kriterium mit Unterpunkten (z. B. „Verfügen über sprachliche Mittel“ in Wortschatz, Grammatik und Aussprache) in eigene Kriterien, sodass du für jeden Teil ein eigenes Kreuz setzen kannst. Grade’Em schlägt die Teile vor (aus der Erläuterung, fett gesetzten Stichwörtern oder dem Namen) und ordnet jeden Aufzählungspunkt anhand von Stichwörtern zu; in der Vorschau tippst du Zuordnungen um, ein Punkt kann auch zu mehreren Teilen gehören. Die Teile teilen sich das bisherige Gewicht: Sie erhalten das ursprüngliche Gewicht, die übrigen Kriterien werden entsprechend vervielfacht – die Anteile an der Note bleiben gleich.
 - Eigene Raster sind im Backup enthalten und lassen sich als `.md`-Datei weitergeben.
 
 ### Fachschaftsraster im Repository pflegen
 
-Die Raster im Ordner `raster/` stehen allen zur Verfügung, die die App über dein Repository nutzen. Das Format beschreibt `raster/FORMAT.md`. Die Angabe `name:` bestimmt, wie das Raster in der App heißt (z. B. `Chemie EE26`); der `titel:` steht gedruckt auf dem Bogen.
+Die Raster im Ordner `raster/` stehen allen zur Verfügung, die die App über dein Repository nutzen. Das Format beschreibt `raster/FORMAT.md`. Die Angabe `name:` bestimmt, wie das Raster in der App heißt (z. B. `Chemie (ee26)`); der `titel:` steht gedruckt auf dem Bogen.
 
 Voraussetzung: Im Repository liegt die Datei `.nojekyll` (siehe Abschnitt 1, Schritt 3). Fehlt sie, zeigt die Rasterverwaltung einen Hinweis.
 
 1. Neue oder geänderte `.md`-Datei in den Ordner `raster/` hochladen.
 2. Bei einem **neuen** Raster einen Eintrag in `raster/index.json` ergänzen (die App kann den Ordner nicht selbst durchsuchen), z. B.:
-   `{ "file": "physik.md", "name": "Physik EE26", "titel": "Kriterien … Physik", "fach": "Physik", "klassen": "", "typ": "kriterien", "wertung": "mittelwert" }`
-3. In `sw.js` die neue Datei in die Liste `OPTIONAL_FILES` eintragen (`'./raster/physik.md',`) und `CACHE_VERSION` hochzählen.
+   `{ "file": "biotechnologie.md", "name": "Biotechnologie (ee26)", "titel": "Kriterien … Physik", "fach": "Physik", "klassen": "", "typ": "kriterien", "wertung": "mittelwert" }`
+3. In `sw.js` die neue Datei in die Liste `OPTIONAL_FILES` eintragen (`'./raster/biotechnologie.md',`) und `CACHE_VERSION` hochzählen.
 
 Nach dem Update übernimmt die App geänderte Fachschaftsraster automatisch für **neue** Runden; laufende Runden mit Bewertungen behalten ihre Fassung.
 
@@ -212,7 +213,9 @@ Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export (19 Tests) sowie 
 
 ## Versionen
 
-- **1.3.1** – Fachschaftsraster funktionieren jetzt immer: Die App enthält sie selbst und lädt neuere Fassungen aus dem Repository, sobald sie erreichbar sind (behebt die Meldung „offline nicht verfügbar“ auf GitHub Pages ohne `.nojekyll`). Raster haben einen Anzeigenamen (`name:`, z. B. „Chemie EE26“). Hinweis in der Rasterverwaltung, wenn die Dateien im Repository nicht abrufbar sind.
+- **1.4.0** – Raster heißen „[Fach] (ee26)“; neu „Englisch (ee26)“ und „Physik (ee26)“ (wie Chemie), „Englisch 5/6 (ee26)“, Ankreuzbogen entfernt; Musik ohne vorangestellte Notenziffern. Editor mit Rückgängig/Wiederholen sowie Kriterien verschieben, kopieren und aufteilen. Kommentarfelder einzeilig. In der Lerngruppe heißt der Knopf jetzt „Einstellungen“; neben „Raster dieser Runde“ führt „ändern“ direkt zur Rasterauswahl.
+
+- **1.3.1** – Fachschaftsraster funktionieren jetzt immer: Die App enthält sie selbst und lädt neuere Fassungen aus dem Repository, sobald sie erreichbar sind (behebt die Meldung „offline nicht verfügbar“ auf GitHub Pages ohne `.nojekyll`). Raster haben einen Anzeigenamen (`name:`, z. B. „Chemie (ee26)“). Hinweis in der Rasterverwaltung, wenn die Dateien im Repository nicht abrufbar sind.
 - **1.3.0** – Beliebige Bewertungsraster: Fachschaftsraster auswählbar, eigene Raster importieren (auch per KI), bearbeiten und weitergeben. Neue Bewertungsarten Punktsumme (Chemie, Kunst) und Matrix (Geschichte, Religion). Raster, Gewichtung und Umrechnung pro Lerngruppe; jede Runde behält ihre Rasterfassung. Schülibögen, Word-Export und Notenliste richten sich nach dem Raster. Neue Begriffe „Schüli/Schülis“. Bestehende Daten werden automatisch übernommen.
 - **1.2.0** – Neuer Name **Grade’Em** und neues Symbol. Backup-Knopf und Lizenzvermerk in der Kopfzeile. PDFs ohne Kopf-/Fußzeile des Browsers; die Notenliste wird dafür selbst auf Seiten verteilt. Ordner `raster/` mit den Fachschaftsrastern (noch nicht in der App nutzbar).
 - **1.1.0** – Notenskala pro Lerngruppe statt zentral. Bestehende Lerngruppen und ältere Backups übernehmen beim ersten Start automatisch die bisher eingestellte Skala.

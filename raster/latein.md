@@ -1,6 +1,6 @@
 ---
 format: gradeem-raster/1
-name: Latein EE26
+name: Latein (ee26)
 titel: Latein: Kriterien für die Bewertung der mündlichen Leistung im Unterricht
 fach: Latein
 quelle: Kriterienraster_mdl_Latein.pdf

@@ -824,9 +824,12 @@ textarea.input {
 
 .crit textarea.input {
   margin-top: 8px;
-  min-height: 52px;
-  height: 52px;
+  min-height: 44px;
+  height: 44px;
+  padding-top: 9px;
+  padding-bottom: 9px;
   font-size: 16px;
+  line-height: 1.4;
 }
 
 .definitions summary {
@@ -2058,4 +2061,58 @@ textarea.code {
   .crit--stack textarea.input {
     grid-column: 1;
   }
+}
+
+#raster-section {
+  scroll-margin-top: calc(var(--bar-h) + var(--safe-top) + 12px);
+}
+
+.ed-bar {
+  position: sticky;
+  top: calc(var(--bar-h) + var(--safe-top));
+  z-index: 8;
+  padding: 8px 0;
+  background: var(--slide);
+}
+
+.ed-tools .btn {
+  min-height: 42px;
+  font-size: 15px;
+  padding: 0 12px;
+}
+
+.split-stufe h3 {
+  margin: 14px 0 4px;
+  font-size: 16px;
+}
+
+.split-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.split-item.is-none {
+  color: var(--eosin);
+}
+
+.split-chips {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.split-chips .chip {
+  color: var(--stain-text);
+  min-height: 38px;
+  font-size: 14px;
+}
+
+.split-chips .chip.is-on {
+  background: var(--stain);
+  border-color: var(--stain);
+  color: var(--stain-ink);
 }

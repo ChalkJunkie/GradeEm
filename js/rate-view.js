@@ -172,9 +172,9 @@ export async function renderRate(ctx, g, studentId) {
 
   const crit = draft.crit;
   const commentField = (i, label) => {
-    const ta = h('textarea', { class: 'input', rows: 2, placeholder: `Kommentar zu „${label}“ (optional)`, 'aria-label': `Kommentar ${label}` });
+    const ta = h('textarea', { class: 'input', rows: 1, placeholder: `Kommentar zu „${label}“ (optional)`, 'aria-label': `Kommentar ${label}` });
     ta.value = crit[i].comment || '';
-    const grow = () => { ta.style.height = 'auto'; ta.style.height = `${Math.max(52, ta.scrollHeight + 2)}px`; };
+    const grow = () => { ta.style.height = 'auto'; ta.style.height = `${Math.max(44, ta.scrollHeight + 2)}px`; };
     ta.addEventListener('input', () => { crit[i].comment = ta.value; grow(); ensure(); });
     requestAnimationFrame(grow);
     return ta;
