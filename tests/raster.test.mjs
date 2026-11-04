@@ -132,3 +132,14 @@ test('Hilfsfunktion emptyCrit', () => {
   assert.equal(emptyCrit(load('geschichte.md').raster).length, 2);
   assert.equal(emptyCrit(load('ethik.md').raster).length, 6);
 });
+
+test('eingebautes Rasterpaket entspricht dem Ordner raster/ und hat Anzeigenamen', async () => {
+  const { BUILTIN_RASTER, BUILTIN_INDEX } = await import('../js/raster-builtin.js');
+  assert.deepEqual(Object.keys(BUILTIN_RASTER).sort(), [...files].sort());
+  for (const f of files) assert.equal(BUILTIN_RASTER[f], readFileSync(new URL(f, DIR), 'utf8'), f);
+  for (const e of BUILTIN_INDEX) {
+    assert.match(e.name, /EE26/, e.file);
+    assert.equal(parseRaster(BUILTIN_RASTER[e.file]).raster.meta.name, e.name);
+  }
+  assert.equal(new Set(BUILTIN_INDEX.map((e) => e.name)).size, BUILTIN_INDEX.length, 'Namen eindeutig');
+});

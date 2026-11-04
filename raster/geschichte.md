@@ -1,5 +1,6 @@
 ---
 format: gradeem-raster/1
+name: Geschichte EE26
 typ: matrix
 titel: Kriterien der Unterrichtsnote im Fach Geschichte
 fach: Geschichte

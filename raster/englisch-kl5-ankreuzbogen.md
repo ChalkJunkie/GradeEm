@@ -1,5 +1,6 @@
 ---
 format: gradeem-raster/1
+name: Englisch EE26 (Kl. 5, Ankreuzbogen)
 titel: Kriterien zur mündlichen Note im Fach Englisch für Schüler*innen
 fach: Englisch
 klassen: 5

@@ -23,9 +23,11 @@ Du brauchst ein kostenloses Konto auf [github.com](https://github.com). Das geht
 1. **Neues Repository anlegen:** oben rechts auf **+** → **New repository**. Name z. B. `gradeem`, Sichtbarkeit **Public** (GitHub Pages ist im kostenlosen Tarif nur für öffentliche Repositories verfügbar). Auf **Create repository** tippen.
    Das Repository enthält nur den Programmcode, niemals Daten von Schülis – die liegen ausschließlich auf dem iPad.
 2. **Dateien hochladen:** Die ZIP-Datei entpacken (in der Dateien-App: ZIP antippen). Im neuen Repository **uploading an existing file** bzw. **Add file → Upload files** wählen und den **Inhalt** des Ordners `gradeem` hochladen – also `index.html`, `manifest.json`, `sw.js`, `LICENSE.md`, `README.md`, `.nojekyll` und die Ordner `css`, `js`, `vendor`, `icons`, `raster`, `tests`. Wichtig: `index.html` muss direkt auf oberster Ebene liegen, nicht in einem Unterordner. Unten auf **Commit changes** tippen.
-   *Tipp:* Am Mac oder PC lässt sich der ganze Ordnerinhalt einfach per Drag & Drop in das Upload-Feld ziehen. Die Datei `.nojekyll` ist auf manchen Systemen versteckt; sie ist praktisch, aber nicht zwingend nötig.
-3. **Pages einschalten:** Im Repository **Settings → Pages**. Unter *Build and deployment* bei **Source** „Deploy from a branch“ wählen, Branch **main** und Ordner **/ (root)**, dann **Save**.
-4. Nach ein bis zwei Minuten erscheint oben auf der Pages-Seite die Adresse, z. B.
+   *Tipp:* Am Mac oder PC lässt sich der ganze Ordnerinhalt einfach per Drag & Drop in das Upload-Feld ziehen.
+3. **Wichtig – Datei `.nojekyll` anlegen:** GitHub Pages wandelt Markdown-Dateien sonst in Webseiten um, und die Rasterdateien im Ordner `raster/` sind nicht mehr abrufbar. Die Datei liegt zwar im ZIP, wird aber am iPad (und oft auch am Mac) ausgeblendet und deshalb nicht mit hochgeladen. So legst du sie direkt auf GitHub an: im Repository **Add file → Create new file**, als Namen `.nojekyll` eintippen (mit Punkt am Anfang), Inhalt leer lassen, **Commit changes**.
+   Die mitgelieferten Fachschaftsraster funktionieren auch ohne diese Datei, weil die App sie selbst enthält. Neue oder geänderte Raster aus dem Repository kommen aber nur mit `.nojekyll` an.
+4. **Pages einschalten:** Im Repository **Settings → Pages**. Unter *Build and deployment* bei **Source** „Deploy from a branch“ wählen, Branch **main** und Ordner **/ (root)**, dann **Save**.
+5. Nach ein bis zwei Minuten erscheint oben auf der Pages-Seite die Adresse, z. B.
    `https://DEIN-NAME.github.io/gradeem/`
 
 ## 2. Auf dem iPad installieren
@@ -101,12 +103,14 @@ Alle Daten liegen nur im Speicher dieser App auf dem iPad. Wird die App gelösch
 
 ### Fachschaftsraster im Repository pflegen
 
-Die Raster im Ordner `raster/` stehen allen zur Verfügung, die die App über dein Repository nutzen. Das Format beschreibt `raster/FORMAT.md`.
+Die Raster im Ordner `raster/` stehen allen zur Verfügung, die die App über dein Repository nutzen. Das Format beschreibt `raster/FORMAT.md`. Die Angabe `name:` bestimmt, wie das Raster in der App heißt (z. B. `Chemie EE26`); der `titel:` steht gedruckt auf dem Bogen.
+
+Voraussetzung: Im Repository liegt die Datei `.nojekyll` (siehe Abschnitt 1, Schritt 3). Fehlt sie, zeigt die Rasterverwaltung einen Hinweis.
 
 1. Neue oder geänderte `.md`-Datei in den Ordner `raster/` hochladen.
 2. Bei einem **neuen** Raster einen Eintrag in `raster/index.json` ergänzen (die App kann den Ordner nicht selbst durchsuchen), z. B.:
-   `{ "file": "physik.md", "titel": "Kriterien … Physik", "fach": "Physik", "klassen": "", "typ": "kriterien", "wertung": "mittelwert" }`
-3. In `sw.js` die neue Datei in die Liste `APP_FILES` eintragen (`'./raster/physik.md',`) und `CACHE_VERSION` hochzählen.
+   `{ "file": "physik.md", "name": "Physik EE26", "titel": "Kriterien … Physik", "fach": "Physik", "klassen": "", "typ": "kriterien", "wertung": "mittelwert" }`
+3. In `sw.js` die neue Datei in die Liste `OPTIONAL_FILES` eintragen (`'./raster/physik.md',`) und `CACHE_VERSION` hochzählen.
 
 Nach dem Update übernimmt die App geänderte Fachschaftsraster automatisch für **neue** Runden; laufende Runden mit Bewertungen behalten ihre Fassung.
 
@@ -164,7 +168,7 @@ js/sheet-data.js      Aufbereitung für Bögen und Notenliste
 js/print.js           Druckansichten (1, 2, 4 Bögen pro Seite; Notenliste; Rasterübersicht)
 js/raster.js          Raster einlesen, prüfen und schreiben (Markdown ↔ Modell)
 js/engine.js          Berechnung für alle Rasterarten (Mittelwert, Punktsumme, Matrix)
-js/raster-builtin.js  eingebaute Kopie des Biologie-Rasters (Datenübernahme, offline)
+js/raster-builtin.js  eingebaute Kopie aller Fachschaftsraster (offline, Datenübernahme)
 js/rate-view.js       Bewertungsansicht
 js/raster-ui.js       Rasterverwaltung, Import und Editor
 js/docx-export.js     Word-Export
@@ -208,6 +212,7 @@ Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export (19 Tests) sowie 
 
 ## Versionen
 
+- **1.3.1** – Fachschaftsraster funktionieren jetzt immer: Die App enthält sie selbst und lädt neuere Fassungen aus dem Repository, sobald sie erreichbar sind (behebt die Meldung „offline nicht verfügbar“ auf GitHub Pages ohne `.nojekyll`). Raster haben einen Anzeigenamen (`name:`, z. B. „Chemie EE26“). Hinweis in der Rasterverwaltung, wenn die Dateien im Repository nicht abrufbar sind.
 - **1.3.0** – Beliebige Bewertungsraster: Fachschaftsraster auswählbar, eigene Raster importieren (auch per KI), bearbeiten und weitergeben. Neue Bewertungsarten Punktsumme (Chemie, Kunst) und Matrix (Geschichte, Religion). Raster, Gewichtung und Umrechnung pro Lerngruppe; jede Runde behält ihre Rasterfassung. Schülibögen, Word-Export und Notenliste richten sich nach dem Raster. Neue Begriffe „Schüli/Schülis“. Bestehende Daten werden automatisch übernommen.
 - **1.2.0** – Neuer Name **Grade’Em** und neues Symbol. Backup-Knopf und Lizenzvermerk in der Kopfzeile. PDFs ohne Kopf-/Fußzeile des Browsers; die Notenliste wird dafür selbst auf Seiten verteilt. Ordner `raster/` mit den Fachschaftsrastern (noch nicht in der App nutzbar).
 - **1.1.0** – Notenskala pro Lerngruppe statt zentral. Bestehende Lerngruppen und ältere Backups übernehmen beim ersten Start automatisch die bisher eingestellte Skala.

@@ -58,7 +58,7 @@ export function rasterSelect(ctx, value) {
   const fs = h('optgroup', { label: 'Fachschaftsraster' });
   for (const e of ctx.state.fsIndex) {
     const id = `fs:${e.file.replace(/\.md$/, '')}`;
-    fs.append(h('option', { value: id, selected: id === value }, `${e.fach} – ${e.titel}${e.klassen ? ` (Kl. ${e.klassen})` : ''}`));
+    fs.append(h('option', { value: id, selected: id === value }, e.name || `${e.fach} – ${e.titel}${e.klassen ? ` (Kl. ${e.klassen})` : ''}`));
   }
   sel.append(fs);
   const own = ctx.ownRasters();
@@ -97,7 +97,7 @@ export function renderRasterLibrary(ctx) {
   const fsList = h('div', { class: 'raster-list' }, ctx.state.fsIndex.map((e) => {
     const id = `fs:${e.file.replace(/\.md$/, '')}`;
     return h('div', { class: 'raster-item' },
-      h('div', null, h('b', null, e.fach), ' ', e.klassen ? h('span', { class: 'badge' }, `Kl. ${e.klassen}`) : null,
+      h('div', null, h('b', null, e.name || e.fach), ' ', e.klassen ? h('span', { class: 'badge' }, `Kl. ${e.klassen}`) : null,
         h('div', { class: 'muted' }, e.titel, e.typ === 'matrix' ? ' · Matrix' : e.wertung === 'summe' ? ' · Punktsumme' : '')),
       h('div', { class: 'btn-group' },
         h('a', { class: 'btn', href: `#/raster/ansehen/${encodeURIComponent(id)}` }, 'Ansehen'),
@@ -113,7 +113,9 @@ export function renderRasterLibrary(ctx) {
         h('a', { class: 'btn', href: `#/raster/bearbeiten/${encodeURIComponent(rec.id)}` }, icon('edit'), 'Bearbeiten')))))
     : h('p', { class: 'muted' }, 'Noch keine eigenen Raster. Importiere eines oder bearbeite ein Fachschaftsraster als eigene Fassung.');
 
+  const repoNote = h('div');
   const main = h('main', { class: 'main' },
+    repoNote,
     h('section', { class: 'section panel' },
       h('h2', null, 'Eigenes Raster hinzufügen'),
       h('p', { class: 'muted small', style: { marginTop: 0 } }, 'Am einfachsten mit einer KI: Prompt kopieren, zusammen mit dem Raster (PDF, Word-Datei oder Foto) an einen KI-Assistenten geben, die Antwort kopieren und hier über „Raster importieren“ einfügen. Raster enthalten keine Daten von Schülis.'),
@@ -127,6 +129,16 @@ export function renderRasterLibrary(ctx) {
       fsList),
   );
   ctx.view(ctx.topbar({ back: '#/einstellungen', title: 'Bewertungsraster' }), main);
+  // Für die Pflege: Sind die Rasterdateien im Repository abrufbar?
+  const probe = ctx.state.fsIndex[0];
+  if (probe && navigator.onLine) {
+    ctx.fetchText(`raster/${probe.file}`)
+      .then((t) => { if (!ctx.parseRaster(t).ok) throw new Error('kein Raster'); })
+      .catch(() => {
+        repoNote.replaceChildren(h('div', { class: 'notice' }, h('p', null,
+          'Hinweis für die Pflege: Die Rasterdateien im Ordner „raster“ sind auf dem Server nicht abrufbar. Grade’Em nutzt deshalb die mitgelieferten Fassungen – das funktioniert. Damit neue oder geänderte Fachschaftsraster aus dem Repository ankommen, muss dort die Datei „.nojekyll“ liegen: Repository öffnen → „Add file“ → „Create new file“ → Name „.nojekyll“ → „Commit changes“.')));
+      });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -307,6 +319,7 @@ export async function renderRasterEditor(ctx, param) {
     parts.push(h('section', { class: 'ed-section panel' },
       h('h3', null, 'Allgemein'),
       h('div', { class: 'ed-grid' },
+        input('Anzeigename in der App (z. B. Biologie EE26)', m.name, (v) => { m.name = v; }),
         input('Titel', m.titel, (v) => { m.titel = v; }),
         input('Titel auf dem Schülibogen (optional)', m.titel_schuelibogen, (v) => { m.titel_schuelibogen = v; }),
         input('Fach', m.fach, (v) => { m.fach = v; }),

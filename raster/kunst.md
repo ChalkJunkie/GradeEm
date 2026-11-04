@@ -1,5 +1,6 @@
 ---
 format: gradeem-raster/1
+name: Bildende Kunst EE26
 titel: Rastermodell für Lehrkräfte und Lernende
 fach: Bildende Kunst
 quelle: Raster_Bildende_Kunst.pdf

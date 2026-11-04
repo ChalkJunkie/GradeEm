@@ -1,5 +1,6 @@
 ---
 format: gradeem-raster/1
+name: Musik EE26
 titel: Kriterien zur mündlichen Leistungsmessung im Fach Musik 2026/27
 fach: Musik
 herausgeber: FS Musik

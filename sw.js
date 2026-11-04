@@ -2,7 +2,7 @@
    Legt alle App-Dateien beim ersten Aufruf im Cache ab; danach läuft die App
    vollständig offline. Bei einer neuen Version CACHE_VERSION erhöhen. */
 
-const CACHE_VERSION = 'gradeem-v1.3.0';
+const CACHE_VERSION = 'gradeem-v1.3.1';
 
 const APP_FILES = [
   './',
@@ -23,6 +23,20 @@ const APP_FILES = [
   './js/raster-builtin.js',
   './js/rate-view.js',
   './js/raster-ui.js',
+  './vendor/docx.min.js',
+  './vendor/fonts/atkinson-hyperlegible-latin-400-normal.woff2',
+  './vendor/fonts/atkinson-hyperlegible-latin-700-normal.woff2',
+  './icons/icon.svg',
+  './icons/apple-touch-icon.png',
+  './icons/favicon-64.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
+];
+
+// Fachschaftsraster: werden mitgeladen, falls erreichbar. Fehlen sie (z. B. ohne .nojekyll
+// auf GitHub Pages), nutzt die App ihre eingebaute Kopie – die Installation scheitert nicht.
+const OPTIONAL_FILES = [
   './raster/index.json',
   './raster/KI-PROMPT.md',
   './raster/biologie.md',
@@ -39,20 +53,12 @@ const APP_FILES = [
   './raster/musik.md',
   './raster/religion.md',
   './raster/spanisch.md',
-  './vendor/docx.min.js',
-  './vendor/fonts/atkinson-hyperlegible-latin-400-normal.woff2',
-  './vendor/fonts/atkinson-hyperlegible-latin-700-normal.woff2',
-  './icons/icon.svg',
-  './icons/apple-touch-icon.png',
-  './icons/favicon-64.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_FILES.map((u) => new Request(u, { cache: 'reload' })))),
+    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_FILES.map((u) => new Request(u, { cache: 'reload' })))
+      .then(() => Promise.allSettled(OPTIONAL_FILES.map((u) => cache.add(new Request(u, { cache: 'reload' })))))),
   );
 });
 

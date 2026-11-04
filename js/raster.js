@@ -6,7 +6,7 @@
  *
  * Modell:
  * {
- *   meta: { format, titel, fach, typ: 'kriterien'|'matrix', wertung: 'mittelwert'|'summe',
+ *   meta: { format, name (Anzeigename in der App), titel, fach, typ: 'kriterien'|'matrix', wertung: 'mittelwert'|'summe',
  *           titel_schuelibogen, untertitel, klassen, stand, schule, herausgeber, quelle,
  *           kopfzeile: string[], schuelibogen: 'vollstaendig'|'kompakt', kommentarspalte,
  *           notendefinitionen: boolean, spalte_kriterien, spalte_stufen, einheit, extra: {} },
@@ -102,7 +102,7 @@ const META_ALIASES = {
   schuelerbogen: 'schuelibogen',
   titel_schuelerbogen: 'titel_schuelibogen',
 };
-const KNOWN_META = ['format', 'typ', 'wertung', 'titel', 'titel_schuelibogen', 'untertitel', 'fach', 'klassen', 'stand',
+const KNOWN_META = ['format', 'name', 'typ', 'wertung', 'titel', 'titel_schuelibogen', 'untertitel', 'fach', 'klassen', 'stand',
   'schule', 'herausgeber', 'quelle', 'kopfzeile', 'schuelibogen', 'kommentarspalte', 'notendefinitionen',
   'spalte_kriterien', 'spalte_stufen', 'einheit'];
 
@@ -144,6 +144,7 @@ export function parseRaster(text) {
     format: rawMeta.format || '',
     typ: (rawMeta.typ || 'kriterien').toLowerCase() === 'matrix' ? 'matrix' : 'kriterien',
     wertung: (rawMeta.wertung || 'mittelwert').toLowerCase() === 'summe' ? 'summe' : 'mittelwert',
+    name: rawMeta.name || '',
     titel: rawMeta.titel || '',
     titel_schuelibogen: rawMeta.titel_schuelibogen || '',
     untertitel: rawMeta.untertitel || '',
@@ -353,6 +354,7 @@ export function serializeRaster(r) {
   const m = r.meta;
   const fm = ['---', `format: ${FORMAT_ID}`];
   const put = (k, v) => { if (v !== undefined && v !== null && v !== '' && v !== false) fm.push(`${k}: ${v}`); };
+  put('name', m.name);
   if (m.typ === 'matrix') put('typ', 'matrix');
   if (m.typ !== 'matrix' && m.wertung === 'summe') put('wertung', 'summe');
   put('titel', m.titel);
@@ -430,6 +432,7 @@ export function hashText(text) {
 export function rasterLabel(r) {
   if (!r) return '';
   const m = r.meta || r;
+  if (m.name) return m.name;
   return [m.fach, m.titel].filter(Boolean).join(' – ');
 }
 
@@ -447,6 +450,7 @@ export function critName(r, i) {
 /** Leeres Raster als Vorlage für „Neues Raster“. */
 export const EMPTY_TEMPLATE = `---
 format: ${FORMAT_ID}
+name: Mein Raster
 titel: Kriterien zur mündlichen Note
 fach: Mein Fach
 kommentarspalte: Kommentar

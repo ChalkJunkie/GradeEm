@@ -15,11 +15,11 @@ import { openPrintView, buildSheetPages, buildListPages } from './print.js';
 import { sheetsToDocxBlob } from './docx-export.js';
 import { parseRaster, hashText, rasterLabel } from './raster.js';
 import { evaluateRaster, statusOf as rasterStatus, defaultWeights, emptyCrit } from './engine.js';
-import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD } from './raster-builtin.js';
+import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD, BUILTIN_INDEX, BUILTIN_RASTER } from './raster-builtin.js';
 import { renderRate, studentGrid as gridOf } from './rate-view.js';
 import { renderRasterLibrary, renderRasterView, renderRasterEditor, rasterSelect } from './raster-ui.js';
 
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.3.1';
 export const APP_NAME = 'Grade’Em';
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de';
 
@@ -132,14 +132,29 @@ async function fetchText(url) {
   return res.text();
 }
 
+/**
+ * Verzeichnis der Fachschaftsraster: mitgelieferte Liste, ergänzt bzw. aktualisiert
+ * durch raster/index.json aus dem Repository (falls erreichbar).
+ */
 async function loadFsIndex() {
+  const list = BUILTIN_INDEX.map((e) => ({ ...e }));
   try {
     const res = await fetch('raster/index.json');
-    if (!res.ok) throw new Error('index');
-    state.fsIndex = await res.json();
+    if (res.ok) {
+      const remote = await res.json();
+      if (Array.isArray(remote)) {
+        for (const e of remote) {
+          if (!e || typeof e.file !== 'string') continue;
+          const i = list.findIndex((x) => x.file === e.file);
+          if (i >= 0) list[i] = { ...list[i], ...e };
+          else list.push(e);
+        }
+      }
+    }
   } catch {
-    state.fsIndex = [{ file: BIOLOGIE_FILE, titel: 'Kriterien zur mündlichen Notengebung im Fach Biologie', fach: 'Biologie', klassen: '', typ: 'kriterien', wertung: 'mittelwert' }];
+    /* offline oder nicht erreichbar – mitgelieferte Liste genügt */
   }
+  state.fsIndex = list;
 }
 
 function versionModel(hash) {
@@ -192,13 +207,17 @@ async function loadRasterText(id) {
     return rec.text;
   }
   if (!id.startsWith('fs:')) throw new Error('Unbekanntes Raster.');
+  const file = fsFile(id);
+  // 1. aktuelle Fassung aus dem Repository, 2. mitgelieferte Fassung, 3. zuletzt gespeicherte Fassung
   try {
-    return await fetchText(`raster/${fsFile(id)}`);
+    const t = await fetchText(`raster/${file}`);
+    if (parseRaster(t).ok) return t;
   } catch {
-    if (rec) return rec.text;
-    if (id === BIOLOGIE_ID) return BIOLOGIE_MD;
-    throw new Error('Das Raster ist offline nicht verfügbar. Bitte Grade’Em einmal mit Internetverbindung öffnen.');
+    /* nicht erreichbar */
   }
+  if (BUILTIN_RASTER[file]) return BUILTIN_RASTER[file];
+  if (rec) return rec.text;
+  throw new Error(`Die Rasterdatei „raster/${file}“ ist nicht erreichbar. Läuft die App über GitHub Pages, muss im Repository die Datei „.nojekyll“ liegen (siehe README, Abschnitt „Fachschaftsraster im Repository pflegen“).`);
 }
 
 async function ensureRaster(id) {
@@ -215,10 +234,10 @@ async function ensureRaster(id) {
 async function refreshFachschaftRasters() {
   for (const rec of [...state.rasters.values()].filter((r) => r.source === 'fachschaft')) {
     try {
-      const text = await fetchText(`raster/${rec.file}`);
+      const text = await loadRasterText(rec.id);
       if (hashText(text) !== rec.hash && parseRaster(text).ok) await saveRasterRecord({ ...rec, text });
     } catch {
-      /* offline – alte Fassung bleibt */
+      /* nicht verfügbar – alte Fassung bleibt */
     }
   }
 }
@@ -237,6 +256,13 @@ function groupUmrechnung(g, rasterId) {
 }
 
 const statusFor = (r, a) => rasterStatus(roundRaster(r), a);
+
+/** Anzeigename des Rasters einer Runde (aktueller Name des Rasters, sonst Name der Fassung). */
+function roundLabel(r) {
+  const rec = r && state.rasters.get(r.rasterId);
+  const m = rec && recordModel(rec);
+  return (m && m.meta.name) || rasterLabel(roundRaster(r));
+}
 
 /** Leere Runde an eine neuere Fassung des Gruppenrasters anpassen. */
 async function syncEmptyRound(g, r) {
@@ -470,11 +496,11 @@ function renderHome() {
       const students = g.students || [];
       const done = r ? students.filter((s) => statusFor(r, getAssessment(r.id, s.id)) === 'done').length : 0;
       const pct = students.length ? Math.round((done / students.length) * 100) : 0;
-      const fach = r ? roundRaster(r).meta.fach : '';
+      const fach = r ? roundLabel(r) : '';
       list.append(h('a', { class: 'group-item', href: `#/gruppe/${g.id}` },
         h('span', { class: 'group-item__name' }, g.name || 'Ohne Namen'),
         g.klasse ? h('span', { class: 'group-item__klasse' }, g.klasse) : h('span'),
-        h('span', { class: 'group-item__meta' }, `${countLabel(students.length)}${fach ? ` · Raster ${fach}` : ''}${r ? ` · ${r.title} · ${done} von ${students.length} bewertet` : ''}`),
+        h('span', { class: 'group-item__meta' }, `${countLabel(students.length)}${fach ? ` · ${fach}` : ''}${r ? ` · ${r.title} · ${done} von ${students.length} bewertet` : ''}`),
         h('span', { class: 'progress', 'aria-hidden': 'true' }, h('i', { style: { width: `${pct}%` } }))));
     }
     main.append(h('section', { class: 'section' },
@@ -606,7 +632,7 @@ async function renderGroup(g) {
         if (t) { r.title = t; await saveRound(r); render(); }
       } }, icon('edit')),
       rounds.length > 1 ? h('button', { class: 'btn btn--icon btn--danger', type: 'button', 'aria-label': 'Runde löschen', onclick: () => deleteRound(g, r) }, icon('trash')) : null),
-    h('p', { class: 'muted small', style: { margin: '-6px 0 14px' } }, 'Raster dieser Runde: ', h('a', { href: `#/raster/ansehen/${encodeURIComponent(r.rasterId)}` }, rasterLabel(raster))),
+    h('p', { class: 'muted small', style: { margin: '-6px 0 14px' } }, 'Raster dieser Runde: ', h('a', { href: `#/raster/ansehen/${encodeURIComponent(r.rasterId)}` }, roundLabel(r))),
   );
 
   if (!students.length) {
@@ -631,7 +657,7 @@ async function renderGroup(g) {
   view(topbar({
     back: '#/',
     title: g.name,
-    subtitle: `${g.klasse ? `Klasse ${g.klasse} · ` : ''}${countLabel(students.length)} · ${raster.meta.fach} · ${SCALE_LABELS[displayScale(g)]}`,
+    subtitle: `${g.klasse ? `Klasse ${g.klasse} · ` : ''}${countLabel(students.length)} · ${roundLabel(r)} · ${SCALE_LABELS[displayScale(g)]}`,
     actions: [
       h('a', { class: 'btn', href: `#/gruppe/${g.id}/namen` }, icon('users'), h('span', null, 'Lerngruppe')),
       h('a', { class: 'btn btn--primary', href: `#/gruppe/${g.id}/export` }, icon('share'), h('span', null, 'Export')),
@@ -781,7 +807,7 @@ function rasterPanel(g) {
     h('div', { class: 'row' }, h('div', { style: { flex: '1 1 320px' } }, sel),
       h('a', { class: 'btn', href: `#/raster/ansehen/${encodeURIComponent(r.rasterId)}` }, 'Ansehen'),
       h('a', { class: 'btn', href: '#/raster' }, 'Alle Raster')),
-    h('p', { class: 'muted small' }, `Aktuelle Runde „${r.title}“: ${rasterLabel(raster)}. Jede Runde behält ihr Raster; ein neues Raster gilt ab der nächsten Runde (bzw. sofort, solange die Runde noch keine Bewertungen hat).`),
+    h('p', { class: 'muted small' }, `Aktuelle Runde „${r.title}“: ${roundLabel(r)}. Jede Runde behält ihr Raster; ein neues Raster gilt ab der nächsten Runde (bzw. sofort, solange die Runde noch keine Bewertungen hat).`),
   ];
   const mittel = raster.meta.typ !== 'matrix' && raster.meta.wertung !== 'summe';
   if (mittel) {
@@ -1224,7 +1250,7 @@ async function renderExport(g) {
           h('button', { class: 'btn', type: 'button', onclick: () => setAll(doneIds) }, 'Nur bewertete'),
           h('button', { class: 'btn', type: 'button', onclick: () => setAll([]) }, 'Keine'))),
       pick),
-    h('p', { class: 'muted small' }, `Raster: ${rasterLabel(raster)}. Noten erscheinen in ${scaleName} – einstellbar für diese Lerngruppe unter `,
+    h('p', { class: 'muted small' }, `Raster: ${roundLabel(r)}. Noten erscheinen in ${scaleName} – einstellbar für diese Lerngruppe unter `,
       h('a', { href: `#/gruppe/${g.id}/namen` }, 'Lerngruppe'), `. Runde: ${r.title}.`),
     h('div', { class: 'export-grid' },
       h('section', { class: 'panel export-card' },
@@ -1492,6 +1518,7 @@ const ctx = {
   groupWeights,
   fetchText,
   loadRasterText,
+  parseRaster,
   saveRasterRecord,
   deleteRasterRecord,
   ownRasters,

@@ -24,6 +24,7 @@ AUFBAU DER DATEI
 
 ---
 format: gradeem-raster/1
+name: <Fach> EE26        (Name in der App; Kürzel der Schule anpassen)
 titel: <Überschrift des Rasters>
 fach: <Fach>
 typ: kriterien            (oder matrix, siehe unten; Zeile weglassen bei kriterien)

@@ -1,5 +1,6 @@
 ---
 format: gradeem-raster/1
+name: Französisch EE26
 titel: Bewertungsbogen Mündliche Leistungen in den modernen Fremdsprachen
 fach: Französisch
 quelle: Kriterienraster_Französisch.docx

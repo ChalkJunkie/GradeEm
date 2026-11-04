@@ -1,5 +1,6 @@
 ---
 format: gradeem-raster/1
+name: Biologie EE26
 titel: Kriterien zur mündlichen Notengebung im Fach Biologie
 titel_schuelibogen: Kriterien zur mündlichen Notengebung im Fach Biologie für Schüler*innen
 fach: Biologie

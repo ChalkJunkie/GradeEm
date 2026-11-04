@@ -1,5 +1,6 @@
 ---
 format: gradeem-raster/1
+name: Englisch EE26 (Kl. 5, Bewertungsbogen)
 titel: Bewertungsbogen Mündliche Leistungen im Fach Englisch
 fach: Englisch
 quelle: Englisch_Klasse5_Version1_einfache_Fassung.docx
