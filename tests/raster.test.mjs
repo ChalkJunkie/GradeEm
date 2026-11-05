@@ -16,7 +16,7 @@ const near = (a, b) => Math.abs(a - b) < 1e-9;
 const sel = (...arr) => arr.map((s) => ({ sel: Array.isArray(s) ? s : s === null ? [] : [s], pts: {}, comment: '' }));
 
 test('alle mitgelieferten Raster lassen sich fehlerfrei einlesen', () => {
-  assert.equal(files.length, 15);
+  assert.equal(files.length, 18);
   for (const f of files) {
     const p = load(f);
     assert.deepEqual(p.errors, [], `${f}: ${p.errors.join('; ')}`);
@@ -161,4 +161,67 @@ test('Kriterium aufteilen: Vorschlag, Zuordnung und unveränderte Gewichtsanteil
   assert.ok(near(evaluateRaster(r, { crit: crit(5, 2) }).proposal, before));
   assert.match(r.kriterien[4].cells[5], /Aussprache überwiegend unverständlich/);
   assert.deepEqual(parseRaster(serializeRaster(r)).errors, []);
+});
+
+test('Physik / Mathe 5/6: Sterne, Abschnitt und nicht zählende Kriterien', async () => {
+  const { buildSheet, headerFields } = await import('../js/sheet-data.js');
+  for (const f of ['physik.md', 'mathe-5-6.md']) {
+    const r = load(f).raster;
+    assert.equal(r.kriterien.length, 9, f);
+    assert.equal(maxSum(r), 20, f);
+    assert.match(r.kriterien[4].abschnitt, /^Zusätzliche Rückmeldung zu Mitarbeit und Motivation/);
+    assert.deepEqual(r.kriterien.map((k) => k.gewicht), [1, 1, 1, 1, 0, 0, 0, 0, 0]);
+    const a = { crit: sel(0, 1, 1, 2, 5, 5, 5, 5, 5) }; // 5 + 4 + 4 + 3 = 16 Sterne → 2 (Rückmeldungen zählen nicht)
+    const ev = evaluateRaster(r, a);
+    assert.equal(ev.info.sum, 16);
+    assert.equal(ev.proposal, 2);
+    assert.equal(ev.complete, true);
+    assert.equal(evaluateRaster(r, { crit: sel(0, 1, 1, null) }).complete, false);
+    const sh = buildSheet({ student: { firstName: 'A', lastName: 'B' }, group: { name: '6a' }, raster: r, assessment: { ...a, date: '2026-11-04' } });
+    const hf = Object.fromEntries(headerFields(sh).map((x) => [x.label, x.value]));
+    assert.equal(hf['Summe aller Sterne'], '16');
+    assert.equal(hf['Ermittelte Note'], '2');
+    assert.equal(hf['Datum, Unterschrift'], '04.11.2026');
+  }
+  assert.match(load('physik.md').raster.meta.titel, /Physikunterricht/);
+});
+
+test('Mathe: eine Kriterienspalte mit Notendefinition und Anmerkungen', () => {
+  const r = load('mathe.md').raster;
+  assert.equal(r.meta.name, 'Mathe (ee26)');
+  assert.equal(r.kriterien.length, 1);
+  const p = cellParas(r.kriterien[0].cells[1]);
+  assert.equal(p[0].text, 'Leistung entspricht den Anforderungen voll');
+  assert.equal(p.filter((x) => x.bullet).length, 9);
+  assert.deepEqual(r.stufen.map((s) => s.punkte.join(',')), ['15,14,13', '12,11,10', '9,8,7', '6,5,4', '3,2,1', '0']);
+  assert.match(r.hinweise, /Beweisführung von untergeordneter Bedeutung/);
+});
+
+test('Fachschaftsraster: richtige Fassung online, offline und nach einem App-Update', async () => {
+  const { chooseFachschaftText } = await import('../js/raster.js');
+  const builtin = readFileSync(new URL('physik.md', DIR), 'utf8');
+  const repo = builtin.replace('Physikunterricht', 'Physikunterricht (neu)');
+  // online: Repository gewinnt
+  assert.equal(chooseFachschaftText({ fetched: repo, record: null, builtin }).text, repo);
+  // offline, zuvor aus dem Repository geladen: diese Fassung bleibt
+  const rec = { text: repo, origin: 'repo', builtinHash: hashText(builtin) };
+  assert.equal(chooseFachschaftText({ fetched: null, record: rec, builtin }).text, repo);
+  // offline, App-Update mit neuerer eingebauter Fassung: eingebaute gewinnt
+  const newer = builtin.replace('Physikunterricht', 'Physikunterricht (App)');
+  assert.equal(chooseFachschaftText({ fetched: null, record: rec, builtin: newer }).text, newer);
+  // ungültige Antwort (z. B. 404-Seite) zählt nicht
+  assert.equal(chooseFachschaftText({ fetched: '<h1>404</h1>', record: null, builtin }).origin, 'builtin');
+  assert.equal(chooseFachschaftText({ fetched: null, record: null, builtin: null }), null);
+});
+
+test('Gemeinschaftskunde nutzt den Geographie-Bogen, Mathe 5/6 ohne „(Clas)“', () => {
+  const geo = load('geographie.md').raster;
+  const gk = load('gemeinschaftskunde.md').raster;
+  assert.equal(gk.meta.name, 'Gemeinschaftskunde (ee26)');
+  assert.equal(gk.meta.fach, 'Gemeinschaftskunde');
+  assert.match(gk.meta.titel, /Fach Gemeinschaftskunde/);
+  assert.deepEqual(gk.stufen, geo.stufen);
+  assert.deepEqual(gk.kriterien, geo.kriterien);
+  assert.equal(gk.hinweise, geo.hinweise);
+  assert.doesNotMatch(load('mathe-5-6.md').raster.meta.titel, /Clas/);
 });

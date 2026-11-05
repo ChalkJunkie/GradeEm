@@ -13,13 +13,13 @@ import {
 } from './ui.js';
 import { openPrintView, buildSheetPages, buildListPages } from './print.js';
 import { sheetsToDocxBlob } from './docx-export.js';
-import { parseRaster, hashText, rasterLabel } from './raster.js';
+import { parseRaster, hashText, rasterLabel, chooseFachschaftText } from './raster.js';
 import { evaluateRaster, statusOf as rasterStatus, defaultWeights, emptyCrit } from './engine.js';
 import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD, BUILTIN_INDEX, BUILTIN_RASTER } from './raster-builtin.js';
 import { renderRate, studentGrid as gridOf } from './rate-view.js';
 import { renderRasterLibrary, renderRasterView, renderRasterEditor, rasterSelect } from './raster-ui.js';
 
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.4.2';
 export const APP_NAME = 'Grade’Em';
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de';
 
@@ -207,26 +207,36 @@ async function loadRasterText(id) {
     return rec.text;
   }
   if (!id.startsWith('fs:')) throw new Error('Unbekanntes Raster.');
+  return (await loadFsSource(id)).text;
+}
+
+const builtinHashOf = (file) => (BUILTIN_RASTER[file] ? hashText(BUILTIN_RASTER[file]) : '');
+
+/** Fassung eines Fachschaftsrasters samt Herkunft (Repository oder eingebaut). */
+async function loadFsSource(id) {
   const file = fsFile(id);
-  // 1. aktuelle Fassung aus dem Repository, 2. mitgelieferte Fassung, 3. zuletzt gespeicherte Fassung
+  let fetched = null;
   try {
-    const t = await fetchText(`raster/${file}`);
-    if (parseRaster(t).ok) return t;
+    fetched = await fetchText(`raster/${file}`);
   } catch {
     /* nicht erreichbar */
   }
-  if (BUILTIN_RASTER[file]) return BUILTIN_RASTER[file];
-  if (rec) return rec.text;
-  throw new Error(`Die Rasterdatei „raster/${file}“ ist nicht erreichbar. Läuft die App über GitHub Pages, muss im Repository die Datei „.nojekyll“ liegen (siehe README, Abschnitt „Fachschaftsraster im Repository pflegen“).`);
+  const src = chooseFachschaftText({ fetched, record: state.rasters.get(id), builtin: BUILTIN_RASTER[file] || null });
+  if (!src) throw new Error(`Die Rasterdatei „raster/${file}“ ist nicht erreichbar. Läuft die App über GitHub Pages, muss im Repository die Datei „.nojekyll“ liegen (siehe README, Abschnitt „Fachschaftsraster im Repository pflegen“).`);
+  return src;
 }
 
 async function ensureRaster(id) {
   const have = state.rasters.get(id);
   if (have) return have;
-  const text = await loadRasterText(id);
-  const p = parseRaster(text);
+  const isFs = id.startsWith('fs:');
+  const src = isFs ? await loadFsSource(id) : { text: await loadRasterText(id), origin: null };
+  const p = parseRaster(src.text);
   if (!p.ok) throw new Error(`Das Raster enthält Fehler: ${p.errors[0]}`);
-  const rec = { id, source: id.startsWith('fs:') ? 'fachschaft' : 'eigen', file: id.startsWith('fs:') ? fsFile(id) : '', text };
+  const rec = {
+    id, source: isFs ? 'fachschaft' : 'eigen', file: isFs ? fsFile(id) : '', text: src.text,
+    origin: src.origin, builtinHash: isFs ? builtinHashOf(fsFile(id)) : '',
+  };
   return saveRasterRecord(rec);
 }
 
@@ -234,8 +244,11 @@ async function ensureRaster(id) {
 async function refreshFachschaftRasters() {
   for (const rec of [...state.rasters.values()].filter((r) => r.source === 'fachschaft')) {
     try {
-      const text = await loadRasterText(rec.id);
-      if (hashText(text) !== rec.hash && parseRaster(text).ok) await saveRasterRecord({ ...rec, text });
+      const src = await loadFsSource(rec.id);
+      const bh = builtinHashOf(rec.file);
+      if (parseRaster(src.text).ok && (hashText(src.text) !== rec.hash || rec.origin !== src.origin || rec.builtinHash !== bh)) {
+        await saveRasterRecord({ ...rec, text: src.text, origin: src.origin, builtinHash: bh });
+      }
     } catch {
       /* nicht verfügbar – alte Fassung bleibt */
     }

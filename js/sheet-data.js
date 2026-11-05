@@ -96,6 +96,7 @@ export function headerFields(sheet) {
     let value = '';
     let kind = 'other';
     if (/selbst/.test(l)) kind = 'self';
+    else if (/summe/.test(l)) { value = sheet.ev.info.sum !== undefined ? String(sheet.ev.info.sum) : ''; kind = 'summe'; }
     else if (/name|schüler|schüli/.test(l)) { value = sheet.name; kind = 'name'; }
     else if (/klasse|kurs|lerngruppe/.test(l)) { value = sheet.klasse; kind = 'klasse'; }
     else if (/zeitraum/.test(l)) { value = sheet.zeitraum; kind = 'zeitraum'; }

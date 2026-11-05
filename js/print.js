@@ -62,7 +62,8 @@ function kompaktTable(s) {
   const body = r.kriterien.map((k, i) => {
     const c = s.crit[i];
     const label = k.schuelibogen || k.name;
-    return `<tr><td>${richHTML(`**${label}**`)}${k.erlaeuterung ? `<div class="erl">${esc(k.erlaeuterung)}</div>` : ''}</td>
+    const sec = k.abschnitt ? `<tr><th class="section" colspan="${n + 3 + (commentLabel ? 1 : 0)}">${esc(k.abschnitt)}</th></tr>` : '';
+    return `${sec}<tr><td>${richHTML(`**${label}**`)}${k.erlaeuterung ? `<div class="erl">${esc(k.erlaeuterung)}</div>` : ''}</td>
       <td>${parasHTML(k.cells[0])}</td>
       ${r.stufen.map((_, l) => `<td class="mark">${c.sel.includes(l) ? 'X' : ''}</td>`).join('')}
       <td>${parasHTML(k.cells[n - 1])}</td>
@@ -89,7 +90,8 @@ function fullTable(s, { preview = false } = {}) {
       const pts = on && r.meta.wertung === 'summe' && st.punkte.length > 1 ? `<span class="pts">(${pointsOf(r, l, c)} ${esc(unit)})</span>` : '';
       return `<td class="${on ? 'sel' : ''}">${parasHTML(k.cells[l])}${pts}</td>`;
     }).join('');
-    return `<tr><td>${richHTML(`**${label}**`)}${k.erlaeuterung ? `<div class="erl">${esc(k.erlaeuterung)}</div>` : ''}</td>${cells}${commentLabel ? `<td class="comment">${esc(c.comment)}</td>` : ''}</tr>`;
+    const sec = k.abschnitt ? `<tr><th class="section" colspan="${n + 1 + (commentLabel ? 1 : 0)}">${esc(k.abschnitt)}</th></tr>` : '';
+    return `${sec}<tr><td>${richHTML(`**${label}**`)}${k.erlaeuterung ? `<div class="erl">${esc(k.erlaeuterung)}</div>` : ''}${r.meta.wertung === 'summe' && k.gewicht === 0 && !preview ? '<div class="erl">zählt nicht zur Summe</div>' : ''}</td>${cells}${commentLabel ? `<td class="comment">${esc(c.comment)}</td>` : ''}</tr>`;
   }).join('');
   return `<table class="sheet__crit sheet__crit--full">${cols(w)}<thead>${head}</thead><tbody>${body}</tbody></table>`;
 }

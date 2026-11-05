@@ -2,7 +2,7 @@
    Legt alle App-Dateien beim ersten Aufruf im Cache ab; danach läuft die App
    vollständig offline. Bei einer neuen Version CACHE_VERSION erhöhen. */
 
-const CACHE_VERSION = 'gradeem-v1.4.0';
+const CACHE_VERSION = 'gradeem-v1.4.2';
 
 const APP_FILES = [
   './',
@@ -46,10 +46,13 @@ const OPTIONAL_FILES = [
   './raster/englisch.md',
   './raster/ethik.md',
   './raster/franzoesisch.md',
+  './raster/gemeinschaftskunde.md',
   './raster/geographie.md',
   './raster/geschichte.md',
   './raster/kunst.md',
   './raster/latein.md',
+  './raster/mathe-5-6.md',
+  './raster/mathe.md',
   './raster/musik.md',
   './raster/physik.md',
   './raster/religion.md',

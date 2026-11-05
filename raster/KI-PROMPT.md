@@ -111,6 +111,9 @@ REGELN
     setze „schuelibogen: kompakt“, lege für jede Ankreuzspalte eine Stufe an
     (Spalte „Kreuz“ = Beschriftung im Original, Spalte „Note“ = 1, 2, 3 …)
     und fülle nur die äußeren Stufen mit Text.
-12. Alles, was unklar ist oder geraten werden musste, als
+12. Gibt es einen Teil des Rasters, der laut Original NICHT in die Note eingeht
+    (z. B. „Zusätzliche Rückmeldung zur Mitarbeit“), schreibe bei diesen Kriterien
+    „Gewicht: 0“ und beim ersten davon „Abschnitt: <Überschrift aus dem Original>“.
+13. Alles, was unklar ist oder geraten werden musste, als
     <!-- PRÜFEN: … --> an der passenden Stelle vermerken.
 ```

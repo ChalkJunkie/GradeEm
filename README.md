@@ -213,6 +213,10 @@ Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export (19 Tests) sowie 
 
 ## Versionen
 
+- **1.4.2** – Neues Raster „Gemeinschaftskunde (ee26)“ (Kopie des Geographie-Rasters). Bei „Mathe 5/6 (ee26)“ ist der Hinweis „(Clas)“ aus dem Titel entfernt.
+
+- **1.4.1** – Neue Raster „Mathe (ee26)“ und „Mathe 5/6 (ee26)“, neues Sterne-Raster für „Physik (ee26)“. Rasterformat: Kriterien mit `Gewicht: 0` zählen auch bei Punktsummen nicht mit; `Abschnitt:` setzt eine Zwischenüberschrift. Kopfzeilenfeld „Summe …“ wird automatisch ausgefüllt. Offline bleibt eine aus dem Repository geladene Rasterfassung erhalten.
+
 - **1.4.0** – Raster heißen „[Fach] (ee26)“; neu „Englisch (ee26)“ und „Physik (ee26)“ (wie Chemie), „Englisch 5/6 (ee26)“, Ankreuzbogen entfernt; Musik ohne vorangestellte Notenziffern. Editor mit Rückgängig/Wiederholen sowie Kriterien verschieben, kopieren und aufteilen. Kommentarfelder einzeilig. In der Lerngruppe heißt der Knopf jetzt „Einstellungen“; neben „Raster dieser Runde“ führt „ändern“ direkt zur Rasterauswahl.
 
 - **1.3.1** – Fachschaftsraster funktionieren jetzt immer: Die App enthält sie selbst und lädt neuere Fassungen aus dem Repository, sobald sie erreichbar sind (behebt die Meldung „offline nicht verfügbar“ auf GitHub Pages ohne `.nojekyll`). Raster haben einen Anzeigenamen (`name:`, z. B. „Chemie (ee26)“). Hinweis in der Rasterverwaltung, wenn die Dateien im Repository nicht abrufbar sind.

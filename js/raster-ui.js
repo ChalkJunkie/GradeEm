@@ -511,7 +511,14 @@ export async function renderRasterEditor(ctx, param) {
         input('Kriterium', k.name, (v) => { k.name = v; }),
         input('Erläuterung (optional)', k.erlaeuterung, (v) => { k.erlaeuterung = v; }),
         input('Name auf dem Schülibogen (optional)', k.schuelibogen, (v) => { k.schuelibogen = v; }),
-        isSum ? h('span') : input('Gewicht', String(k.gewicht).replace('.', ','), (v) => { const n = parseFloat(v.replace(',', '.')); k.gewicht = Number.isFinite(n) && n >= 0 ? n : 1; })),
+        isSum
+          ? h('label', { class: 'check' }, (() => {
+            const cb = h('input', { type: 'checkbox', checked: k.gewicht !== 0 });
+            cb.addEventListener('change', () => { k.gewicht = cb.checked ? 1 : 0; changed(); });
+            return cb;
+          })(), 'zählt zur Punktsumme')
+          : input('Gewicht (0 = zählt nicht)', String(k.gewicht).replace('.', ','), (v) => { const n = parseFloat(v.replace(',', '.')); k.gewicht = Number.isFinite(n) && n >= 0 ? n : 1; }),
+        input('Zwischenüberschrift davor (optional)', k.abschnitt, (v) => { k.abschnitt = v; })),
       h('div', { class: 'ed-cells' }, model.stufen.map((st, si) => input(st.name || `Stufe ${si + 1}`, k.cells[si], (v) => { k.cells[si] = v; }, { area: true, rows: 3, placeholder: 'Beschreibung („- “ für Aufzählung, **fett**)' }))),
       h('div', { class: 'row ed-tools', style: { marginTop: '8px' } },
         h('button', { class: 'btn', type: 'button', disabled: ki === 0, 'aria-label': `${k.name} nach oben`, onclick: () => {

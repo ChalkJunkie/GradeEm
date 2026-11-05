@@ -86,6 +86,20 @@ export function buildSheetsDocument(D, sheets) {
     });
   }
 
+  /** Zwischenüberschrift (Abschnitt) als Zeile über die ganze Tabellenbreite. */
+  function sectionRow(k, span) {
+    if (!k.abschnitt) return [];
+    return [new TableRow({
+      cantSplit: true,
+      children: [new TableCell({
+        columnSpan: span,
+        margins,
+        shading: { fill: 'F2F2F2', type: ShadingType.CLEAR, color: 'auto' },
+        children: [new Paragraph({ children: runs(`**${k.abschnitt}**`) })],
+      })],
+    })];
+  }
+
   const xMark = () => new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'X', bold: true, size: 26, font: FONT })] });
 
   function labelParas(k, preferStudent = true) {
@@ -124,9 +138,9 @@ export function buildSheetsDocument(D, sheets) {
         ...(comment ? [cell([new Paragraph({ children: runs(`**${comment}**`) })], w[3 + n])] : []),
       ],
     });
-    const rows = r.kriterien.map((k, i) => {
+    const rows = r.kriterien.flatMap((k, i) => {
       const c = s.crit[i];
-      return new TableRow({
+      return [...sectionRow(k, w.length), new TableRow({
         cantSplit: true,
         children: [
           cell(labelParas(k), w[0]),
@@ -135,7 +149,7 @@ export function buildSheetsDocument(D, sheets) {
           cell(mdParas(k.cells[n - 1]), w[2 + n]),
           ...(comment ? [cell(plainParas(c.comment), w[3 + n])] : []),
         ],
-      });
+      })];
     });
     return new Table({ width: { size: CONTENT_W, type: WidthType.DXA }, columnWidths: w, layout: TableLayoutType.FIXED, borders, rows: [head, ...rows] });
   }
@@ -156,12 +170,14 @@ export function buildSheetsDocument(D, sheets) {
         ...(comment ? [cell([new Paragraph({ children: runs(`**${comment}**`, { size }) })], w[1 + n])] : []),
       ],
     });
-    const rows = r.kriterien.map((k, i) => {
+    const rows = r.kriterien.flatMap((k, i) => {
       const c = s.crit[i];
-      return new TableRow({
+      const label = labelParas(k);
+      if (r.meta.wertung === 'summe' && k.gewicht === 0) label.push(new Paragraph({ children: [new TextRun({ text: 'zählt nicht zur Summe', size: SIZE_SMALL, font: FONT })] }));
+      return [...sectionRow(k, w.length), new TableRow({
         cantSplit: true,
         children: [
-          cell(labelParas(k), w[0]),
+          cell(label, w[0]),
           ...r.stufen.map((st, l) => {
             const on = c.sel.includes(l);
             const ps = mdParas(k.cells[l], { size });
@@ -171,7 +187,7 @@ export function buildSheetsDocument(D, sheets) {
           }),
           ...(comment ? [cell(plainParas(c.comment, { size }), w[1 + n])] : []),
         ],
-      });
+      })];
     });
     return new Table({ width: { size: CONTENT_W, type: WidthType.DXA }, columnWidths: w, layout: TableLayoutType.FIXED, borders, rows: [head, ...rows] });
   }

@@ -88,7 +88,8 @@ Eine Tabelle mit einer Zeile pro Spalte des Rasters, **in der Reihenfolge des Or
 
 Jedes Kriterium ist ein Abschnitt `## Kriterium: Name`. Direkt darunter dürfen stehen:
 
-- `Gewicht: 2` – relatives Gewicht (Standard 1). `0` heißt: wird angezeigt, zählt aber nicht.
+- `Gewicht: 2` – relatives Gewicht (Standard 1). `0` heißt: wird angezeigt und bewertet, zählt aber nicht zur Note – auch bei `wertung: summe` (z. B. zusätzliche Rückmeldungen zur Mitarbeit).
+- `Abschnitt: …` – Zwischenüberschrift, die vor diesem Kriterium über die ganze Tabellenbreite erscheint
 - `Schülibogen: …` – abweichender Name auf dem Schülibogen
 - `Erläuterung: …` – kleiner Zusatztext unter dem Namen
 

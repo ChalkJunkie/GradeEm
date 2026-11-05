@@ -7,7 +7,8 @@
  * wertung „mittelwert“: Zeilenwert = Mittel der Notenwerte der markierten Stufen,
  *                       Vorschlag = gewichteter Mittelwert der Zeilen.
  * wertung „summe“:      Zeilenwert = Punkte der markierten Stufe (bei mehreren: Mittel),
- *                       Summe → Note über die gewählte Umrechnungstabelle.
+ *                       Summe → Note über die gewählte Umrechnungstabelle. Kriterien mit
+ *                       Gewicht 0 werden angezeigt, zählen aber nicht zur Summe.
  * typ „matrix“:         crit[0] = gewählte Zeile, crit[1] = gewählte Spalte;
  *                       Vorschlag = Mittel der Noten in der Zelle.
  */
@@ -44,7 +45,7 @@ export function pointsOf(r, lvl, c) {
 /** Höchstmögliche Summe. */
 export function maxSum(r) {
   const best = Math.max(0, ...r.stufen.map((st) => (st.punkte.length ? Math.max(...st.punkte) : 0)));
-  return best * r.kriterien.length;
+  return best * r.kriterien.filter((k) => k.gewicht !== 0).length;
 }
 
 /**
@@ -100,8 +101,9 @@ export function evaluateRaster(r, a) {
       if (!c || !c.sel || !c.sel.length) return null;
       return mean(c.sel.map((l) => pointsOf(r, l, c)));
     });
-    const rated = rows.filter(isNum);
-    complete = rated.length === r.kriterien.length;
+    const counted = r.kriterien.map((k) => k.gewicht !== 0);
+    const rated = rows.filter((v, i) => counted[i] && isNum(v));
+    complete = rated.length === counted.filter(Boolean).length;
     info.max = maxSum(r);
     if (rated.length) {
       const sum = Math.round(rated.reduce((x, y) => x + y, 0) + 1e-9);

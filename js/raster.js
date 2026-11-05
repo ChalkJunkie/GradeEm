@@ -11,7 +11,7 @@
  *           kopfzeile: string[], schuelibogen: 'vollstaendig'|'kompakt', kommentarspalte,
  *           notendefinitionen: boolean, spalte_kriterien, spalte_stufen, einheit, extra: {} },
  *   stufen:    [{ name, noteText, note, punkteText, punkte: number[], kreuz }],
- *   kriterien: [{ name, gewicht, schuelibogen, erlaeuterung, cells: string[] }],
+ *   kriterien: [{ name, gewicht, schuelibogen, erlaeuterung, abschnitt, cells: string[] }],
  *   umrechnungen: [{ titel, notenpunkte: boolean, rows: [{ summeText, von, bis, noteText, note }] }],
  *   zeilen:  { titel, items: [{ key, text }] },          (nur typ: matrix)
  *   spalten: { titel, items: [{ key, text }] },          (nur typ: matrix)
@@ -247,13 +247,13 @@ export function parseRaster(text) {
   // Kriterien erst nach den Stufen auswerten (Reihenfolge im Text egal)
   const names = r.stufen.map((st) => st.name);
   for (const pc of pendingCrit) {
-    const k = { name: pc.name, gewicht: 1, schuelibogen: '', erlaeuterung: '', cells: names.map(() => '') };
+    const k = { name: pc.name, gewicht: 1, schuelibogen: '', erlaeuterung: '', abschnitt: '', cells: names.map(() => '') };
     if (!k.name) errors.push('Ein Kriterium hat keinen Namen („## Kriterium: Name“).');
     const parts = pc.rest.split(/^### /m);
     for (const line of parts[0].split('\n')) {
       const t = line.trim();
       if (!t) continue;
-      const mm = t.match(/^(Gewicht|Schülibogen|Schülerbogen|Erläuterung)\s*:\s*(.*)$/i);
+      const mm = t.match(/^(Gewicht|Schülibogen|Schülerbogen|Erläuterung|Abschnitt)\s*:\s*(.*)$/i);
       if (!mm) { warnings.push(`Kriterium „${k.name}“: Zeile „${t}“ vor der ersten Stufe wurde ignoriert.`); continue; }
       const prop = mm[1].toLowerCase();
       if (prop === 'gewicht') {
@@ -261,6 +261,7 @@ export function parseRaster(text) {
         if (Number.isFinite(g) && g >= 0) k.gewicht = g;
         else errors.push(`Kriterium „${k.name}“: Gewicht „${mm[2]}“ ist keine Zahl.`);
       } else if (prop === 'erläuterung') k.erlaeuterung = mm[2];
+      else if (prop === 'abschnitt') k.abschnitt = mm[2];
       else k.schuelibogen = mm[2];
     }
     for (const part of parts.slice(1)) {
@@ -398,9 +399,10 @@ export function serializeRaster(r) {
     secs.push(`## Stufen\n\n${table(head, rows)}`);
     for (const k of r.kriterien) {
       const props = [];
+      if (k.abschnitt) props.push(`Abschnitt: ${k.abschnitt}`);
       if (k.erlaeuterung) props.push(`Erläuterung: ${k.erlaeuterung}`);
       if (k.schuelibogen) props.push(`Schülibogen: ${k.schuelibogen}`);
-      if (m.wertung !== 'summe') props.push(`Gewicht: ${String(k.gewicht ?? 1).replace('.', ',')}`);
+      if (m.wertung !== 'summe' || (k.gewicht ?? 1) !== 1) props.push(`Gewicht: ${String(k.gewicht ?? 1).replace('.', ',')}`);
       const parts = [`## Kriterium: ${k.name}`];
       if (props.length) parts.push(props.join('\n'));
       r.stufen.forEach((st, i) => parts.push(`### ${st.name}${k.cells[i] ? `\n${k.cells[i]}` : ''}`));
@@ -415,6 +417,23 @@ export function serializeRaster(r) {
   if (r.fussnoten) secs.push(`## Fußnoten\n\n${r.fussnoten}`);
   if (r.freitext && r.freitext.length) secs.push(`## Freitextfelder\n\n${r.freitext.map((f) => `- ${f}`).join('\n')}`);
   return `${fm.join('\n')}\n\n${secs.join('\n\n')}\n`;
+}
+
+/**
+ * Welche Fassung eines Fachschaftsrasters gilt?
+ * 1. die aktuelle Datei aus dem Repository, wenn sie erreichbar und gültig ist;
+ * 2. sonst eine früher aus dem Repository geladene Fassung – solange die App seitdem
+ *    keine neuere eingebaute Fassung mitbringt;
+ * 3. sonst die eingebaute Fassung; 4. sonst die zuletzt gespeicherte.
+ * @returns {{text:string, origin:'repo'|'builtin'}|null}
+ */
+export function chooseFachschaftText({ fetched, record, builtin }) {
+  if (fetched && parseRaster(fetched).ok) return { text: fetched, origin: 'repo' };
+  const bh = builtin ? hashText(builtin) : '';
+  if (record && record.origin === 'repo' && record.builtinHash === bh) return { text: record.text, origin: 'repo' };
+  if (builtin) return { text: builtin, origin: 'builtin' };
+  if (record) return { text: record.text, origin: record.origin || 'repo' };
+  return null;
 }
 
 /** Kurzer Prüfwert eines Textes (FNV-1a, 32 Bit, hexadezimal). */

@@ -63,6 +63,15 @@
   "wertung": "mittelwert"
  },
  {
+  "file": "gemeinschaftskunde.md",
+  "name": "Gemeinschaftskunde (ee26)",
+  "titel": "Mündliche Note im Fach Gemeinschaftskunde (Klassenstufe 5-12)",
+  "fach": "Gemeinschaftskunde",
+  "klassen": "5-12",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
   "file": "geographie.md",
   "name": "Geographie (ee26)",
   "titel": "Mündliche Note im Fach Geographie (Klassenstufe 5-12)",
@@ -99,6 +108,24 @@
   "wertung": "mittelwert"
  },
  {
+  "file": "mathe-5-6.md",
+  "name": "Mathe 5/6 (ee26)",
+  "titel": "Kriterien für die mündliche Note im Mathematikunterricht in der Unterstufe",
+  "fach": "Mathematik",
+  "klassen": "5/6",
+  "typ": "kriterien",
+  "wertung": "summe"
+ },
+ {
+  "file": "mathe.md",
+  "name": "Mathe (ee26)",
+  "titel": "Kriterien für mündliche Noten im Fach Mathematik",
+  "fach": "Mathematik",
+  "klassen": "",
+  "typ": "kriterien",
+  "wertung": "mittelwert"
+ },
+ {
   "file": "musik.md",
   "name": "Musik (ee26)",
   "titel": "Kriterien zur mündlichen Leistungsmessung im Fach Musik 2026/27",
@@ -110,7 +137,7 @@
  {
   "file": "physik.md",
   "name": "Physik (ee26)",
-  "titel": "Kriterienraster/Bewertungshilfe für mündliche Noten im Fach Physik",
+  "titel": "Kriterien für die mündliche Note im Physikunterricht",
   "fach": "Physik",
   "klassen": "",
   "typ": "kriterien",

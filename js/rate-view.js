@@ -230,6 +230,7 @@ export async function renderRate(ctx, g, studentId) {
         }));
       };
       drawCells();
+      if (k.abschnitt) blocks.push(h('h2', { class: 'crit-section' }, k.abschnitt));
       blocks.push(h('section', { class: 'crit' },
         h('div', { class: 'crit__label' }, h('h2', null, k.name, k.erlaeuterung ? h('span', { class: 'erl' }, k.erlaeuterung) : null), valueEl),
         cellsBox,
@@ -321,7 +322,10 @@ export async function renderRate(ctx, g, studentId) {
     } else {
       raster.kriterien.forEach((k, i) => {
         const v = ev.rows[i];
-        if (isSum) valueEls[i].replaceChildren(v === null ? 'nicht bewertet' : h('span', null, h('b', null, formatDecimal(v, 2, true)), ` ${unit}`));
+        if (isSum) {
+          valueEls[i].replaceChildren(v === null ? 'nicht bewertet' : h('span', null, h('b', null, formatDecimal(v, 2, true)), ` ${unit}`),
+            k.gewicht === 0 ? h('span', null, ' · zählt nicht zur Summe') : '');
+        }
         else {
           const w = ev.info.weights || [];
           const total = w.reduce((x, y) => x + (y > 0 ? y : 0), 0) || 1;
