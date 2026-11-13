@@ -39,7 +39,7 @@ Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf „Tafel“). Noch nic
 - Die Bewerten-Ansicht behält ihren bisherigen Aufbau (Tabelle mit allen Kriterien), weil ein Kriterium pro Bildschirm nicht für alle Raster funktioniert.
 - Kein eigenes Logo-Kästchen („G’“) in der Navigation.
 - Farben von Entwurf 1 („Tafel“: Tafelgrün, Kreidegelb als Akzent, helles Grau) und die Navigationsleiste links bleiben. Schrift bleibt Atkinson Hyperlegible.
-- Dunkelmodus (Vorschlag, Mockup liegt vor): Farben vertauscht, Tafelgrün als Hintergrund, Kreideweiß als Schrift, Kreidegelb bleibt Akzent.
+- Dunkelmodus (Vorschlag, Mockup liegt vor): Farben vertauscht, sehr dunkles Tafelgrün (`#142722`) als Hintergrund, Kreideweiß als Schrift, Kreidegelb bleibt Akzent.
 - Verworfen: Look im Stil von shadcn/ui; Seat'Em-Stil mit Menüzeile oben (Entwurf 3).
 
 ## Vorgemerkt
