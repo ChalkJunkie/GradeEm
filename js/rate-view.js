@@ -410,7 +410,7 @@ export async function renderRate(ctx, g, studentId) {
     document.removeEventListener('keydown', onKey);
   });
 
-  ctx.view(ctx.topbar({
+  ctx.viewBare(ctx.topbar({
     back: `#/gruppe/${g.id}`,
     title: ctx.nameFor(s),
     subtitle: `${g.name} · ${idx + 1} von ${students.length}`,

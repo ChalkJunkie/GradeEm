@@ -19,7 +19,7 @@ import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD, BUILTIN_INDEX, BUILTIN_RASTER 
 import { renderRate, studentGrid as gridOf } from './rate-view.js';
 import { renderRasterLibrary, renderRasterView, renderRasterEditor, rasterSelect } from './raster-ui.js';
 
-export const APP_VERSION = '1.4.2';
+export const APP_VERSION = '1.5.0';
 export const APP_NAME = 'Grade’Em';
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de';
 
@@ -324,11 +324,9 @@ function currentRound(g) {
   return r;
 }
 
+/** Standardname einer neuen Runde: das aktuelle Datum, z. B. „13.11.2026“. */
 function defaultRoundTitle(gid) {
-  const d = new Date();
-  const m = d.getMonth() + 1;
-  const y = d.getFullYear();
-  let t = m >= 8 ? `1. Halbjahr ${y}/${String(y + 1).slice(2)}` : m === 1 ? `1. Halbjahr ${y - 1}/${String(y).slice(2)}` : `2. Halbjahr ${y - 1}/${String(y).slice(2)}`;
+  let t = formatDate(todayISO());
   const existing = new Set(roundsOf(gid).map((r) => r.title));
   if (existing.has(t)) {
     let n = 2;
@@ -446,35 +444,70 @@ async function render() {
       const g = getGroup(b);
       if (!g) return go('', { replace: true });
       if (!c) return await renderGroup(g);
-      if (c === 'namen') return renderGroupEdit(g, d);
+      if (c === 'schuelis') return renderGroupStudents(g);
+      if (c === 'einrichten') return await renderGroupSetup(g);
+      if (c === 'namen') return go(`gruppe/${g.id}/${d === 'raster' ? 'einrichten' : 'schuelis'}`, { replace: true }); // alte Adresse
       if (c === 'export') return await renderExport(g);
       if (c === 'bewerten' && d) return await renderRate(ctx, g, d);
     }
     go('', { replace: true });
   } catch (err) {
     console.error(err);
+    app.className = 'app';
     app.replaceChildren(h('main', { class: 'main' }, h('div', { class: 'empty' }, h('h2', null, 'Diese Ansicht ließ sich nicht öffnen'), h('p', null, String(err && err.message ? err.message : err)), h('a', { class: 'btn', href: '#/' }, 'Zur Startseite'))));
   }
 }
 
-function topbar({ back, title, subtitle, actions = [], brand = false }) {
+function topbar({ back, title, subtitle, actions = [] }) {
   return h('header', { class: 'topbar' },
     back ? h('a', { class: 'btn btn--icon btn--ghost', href: back, 'aria-label': 'Zurück' }, icon('back')) : null,
-    brand
-      ? h('div', { class: 'brand topbar__title' },
-        h('div', { class: 'brand' },
-          h('img', { src: 'icons/icon.svg', alt: '' }),
-          h('b', null, 'Grade', h('span', null, '’Em')),
-          h('span', { class: 'credit' },
-            h('span', null, 'vibe coded by Verena Lohmüller & Claude'),
-            h('a', { href: LICENSE_URL, target: '_blank', rel: 'noopener license' }, 'CC BY-NC-SA 4.0'))))
-      : h('div', { class: 'topbar__title' }, h('h1', null, title), subtitle ? h('small', null, subtitle) : null),
+    h('div', { class: 'topbar__title' }, h('h1', null, title), subtitle ? h('small', null, subtitle) : null),
     ...actions,
   );
 }
 
+/** Feste Navigation links: Lerngruppen, Raster, Einstellungen. */
+function rail() {
+  const [a] = route();
+  const cur = a === 'raster' ? 'raster' : a === 'einstellungen' ? 'settings' : 'groups';
+  const item = (key, href, ic, label) => h('a', { class: 'rail__item', href, 'aria-current': cur === key ? 'page' : undefined }, icon(ic), h('span', null, label));
+  return h('nav', { class: 'rail', 'aria-label': 'Hauptnavigation' },
+    item('groups', '#/', 'users', 'Gruppen'),
+    item('raster', '#/raster', 'grid', 'Raster'),
+    h('span', { class: 'spacer' }),
+    item('settings', '#/einstellungen', 'sliders', 'Einstellungen'));
+}
+
+/** Ansicht mit Navigation links. */
 function view(...children) {
+  app.className = 'app app--rail';
+  app.replaceChildren(rail(), h('div', { class: 'app__body' }, ...children));
+}
+
+/** Ansicht ohne Navigation (Bewerten): volle Breite für das Raster. */
+function viewBare(...children) {
+  app.className = 'app';
   app.replaceChildren(...children);
+}
+
+/** Kopf einer Lerngruppe: Name und die Reiter Noten, Schülis, Einrichten, Export. */
+function groupHead(g, active) {
+  const r = currentRound(g);
+  const n = (g.students || []).length;
+  const tab = (key, path, label, badge) => h('a', { class: 'tabs__tab', href: `#/gruppe/${g.id}${path}`, 'aria-current': key === active ? 'page' : undefined },
+    label, badge !== undefined ? h('span', { class: 'badge' }, badge) : null);
+  return [
+    topbar({
+      back: '#/',
+      title: g.name || 'Ohne Namen',
+      subtitle: `${g.klasse ? `Klasse ${g.klasse} · ` : ''}${r ? `${roundLabel(r)} · ` : ''}${SCALE_LABELS[displayScale(g)]}`,
+    }),
+    h('nav', { class: 'tabs', 'aria-label': 'Bereiche der Lerngruppe' },
+      tab('noten', '', 'Noten'),
+      tab('schuelis', '/schuelis', 'Schülis', n),
+      tab('einrichten', '/einrichten', 'Einrichten'),
+      tab('export', '/export', 'Export')),
+  ];
 }
 
 // ===========================================================================
@@ -486,14 +519,6 @@ function renderHome() {
   const groups = state.groups;
   const main = h('main', { class: 'main' });
 
-  const lastBackup = state.settings.lastBackupAt ? new Date(state.settings.lastBackupAt) : null;
-  const hasData = state.assessments.size > 0;
-  if (hasData && (!lastBackup || Date.now() - lastBackup.getTime() > 14 * 864e5)) {
-    main.append(h('div', { class: 'notice' },
-      h('p', null, lastBackup ? `Letztes Backup am ${formatDate(todayISO(lastBackup))}. Sichere deine Noten regelmäßig als Datei.` : 'Noch kein Backup. Sichere deine Noten als Datei, damit sie bei Geräteverlust nicht verloren gehen.'),
-      h('button', { class: 'btn', type: 'button', onclick: exportBackup }, icon('download'), 'Backup sichern')));
-  }
-
   if (!groups.length) {
     main.append(h('div', { class: 'empty' },
       h('img', { src: 'icons/icon.svg', alt: '' }),
@@ -503,33 +528,76 @@ function renderHome() {
         h('button', { class: 'btn btn--primary btn--big', type: 'button', onclick: newGroupDialog }, icon('plus'), 'Neue Lerngruppe'),
         h('button', { class: 'btn btn--big', type: 'button', onclick: createDemoGroup }, 'Beispielgruppe ausprobieren'))));
   } else {
-    const list = h('div', { class: 'group-list' });
-    for (const g of groups) {
-      const r = currentRound(g);
-      const students = g.students || [];
-      const done = r ? students.filter((s) => statusFor(r, getAssessment(r.id, s.id)) === 'done').length : 0;
-      const pct = students.length ? Math.round((done / students.length) * 100) : 0;
-      const fach = r ? roundLabel(r) : '';
-      list.append(h('a', { class: 'group-item', href: `#/gruppe/${g.id}` },
-        h('span', { class: 'group-item__name' }, g.name || 'Ohne Namen'),
-        g.klasse ? h('span', { class: 'group-item__klasse' }, g.klasse) : h('span'),
-        h('span', { class: 'group-item__meta' }, `${countLabel(students.length)}${fach ? ` · ${fach}` : ''}${r ? ` · ${r.title} · ${done} von ${students.length} bewertet` : ''}`),
-        h('span', { class: 'progress', 'aria-hidden': 'true' }, h('i', { style: { width: `${pct}%` } }))));
-    }
-    main.append(h('section', { class: 'section' },
-      h('div', { class: 'row', style: { marginBottom: '12px' } }, h('h2', { class: 'h2', style: { margin: 0 } }, 'Lerngruppen'), h('span', { class: 'spacer' }),
-        h('button', { class: 'btn btn--primary', type: 'button', onclick: newGroupDialog }, icon('plus'), 'Neue Lerngruppe')),
-      list));
+    const list = h('div', { class: 'group-cards' });
+    for (const g of groups) list.append(groupCard(g));
+    main.append(list);
   }
-  main.append(h('p', { class: 'muted small', style: { textAlign: 'center', marginTop: '36px' } }, `Alle Daten bleiben auf diesem Gerät. ${APP_NAME} ${APP_VERSION}`));
 
+  const foot = h('div', { class: 'home-foot' });
+  const lastBackup = state.settings.lastBackupAt ? new Date(state.settings.lastBackupAt) : null;
+  const hasData = state.assessments.size > 0;
+  if (hasData && (!lastBackup || Date.now() - lastBackup.getTime() > 14 * 864e5)) {
+    foot.append(h('div', { class: 'notice' },
+      h('p', null, h('b', null, lastBackup ? `Letztes Backup am ${formatDate(todayISO(lastBackup))}. ` : 'Noch kein Backup. '),
+        'Sichere deine Noten als Datei, damit sie bei Geräteverlust nicht verloren gehen.'),
+      h('button', { class: 'btn', type: 'button', onclick: exportBackup }, icon('download'), 'Backup sichern')));
+  }
+  foot.append(h('p', { class: 'muted small', style: { textAlign: 'center' } },
+    `Alle Daten bleiben auf diesem Gerät · ${APP_NAME} ${APP_VERSION} · vibe coded by Verena Lohmüller & Claude · `,
+    h('a', { href: LICENSE_URL, target: '_blank', rel: 'noopener license' }, 'CC BY-NC-SA 4.0')));
+  main.append(foot);
+
+  const total = groups.reduce((n, g) => n + (g.students || []).length, 0);
   view(topbar({
-    brand: true,
-    actions: [
-      h('button', { class: 'btn', type: 'button', onclick: exportBackup, title: 'Alle Daten als Datei sichern' }, icon('download'), h('span', null, 'Backup')),
-      h('a', { class: 'btn btn--icon btn--ghost', href: '#/einstellungen', 'aria-label': 'Einstellungen' }, icon('gear')),
-    ],
+    title: 'Lerngruppen',
+    subtitle: groups.length ? `${groups.length} ${groups.length === 1 ? 'Gruppe' : 'Gruppen'} · ${countLabel(total)}` : '',
+    actions: groups.length ? [h('button', { class: 'btn btn--primary', type: 'button', onclick: newGroupDialog }, icon('plus'), 'Neue Lerngruppe')] : [],
   }), main);
+}
+
+/** Karte einer Lerngruppe auf der Startseite – mit direktem Weg zum Bewerten. */
+function groupCard(g) {
+  const r = currentRound(g);
+  const students = sortedStudents(g);
+  const raster = r ? roundRaster(r) : null;
+  let done = 0;
+  let started = 0;
+  let firstOpen = null;
+  const grades = [];
+  for (const s of students) {
+    const a = r ? getAssessment(r.id, s.id) : null;
+    const st = r ? statusFor(r, a) : 'open';
+    if (st === 'done') {
+      done++;
+      const e = evaluateRaster(raster, a).effective;
+      if (e !== null && e !== undefined) grades.push(e);
+    } else {
+      if (st === 'partial') started++;
+      if (!firstOpen) firstOpen = s;
+    }
+  }
+  const pct = students.length ? Math.round((done / students.length) * 100) : 0;
+  const avg = grades.length ? grades.reduce((x, y) => x + y, 0) / grades.length : null;
+  const base = `#/gruppe/${g.id}`;
+  let cta;
+  if (!students.length) cta = h('a', { class: 'btn btn--accent', href: `${base}/schuelis` }, 'Namen hinzufügen');
+  else if (!firstOpen) cta = h('a', { class: 'btn btn--soft', href: `${base}/export` }, 'Exportieren');
+  else cta = h('a', { class: 'btn btn--accent', href: `${base}/bewerten/${firstOpen.id}` }, done || started ? 'Weiter bewerten' : 'Bewertung starten');
+
+  return h('article', { class: 'group-card' },
+    h('div', { class: 'group-card__top' },
+      r ? h('span', { class: 'rtag' }, roundLabel(r)) : null,
+      h('span', { class: 'spacer' }),
+      h('span', null, countLabel(students.length))),
+    h('a', { class: 'group-card__title', href: base },
+      h('h2', null, g.name || 'Ohne Namen'),
+      h('p', null, `${g.klasse ? `Klasse ${g.klasse} · ` : ''}${r ? `Runde ${r.title}` : ''}`)),
+    h('div', { class: 'group-card__progress' },
+      h('span', { class: 'progress', 'aria-hidden': 'true' }, h('i', { style: { width: `${pct}%` } })),
+      h('p', null, h('b', null, `${done} von ${students.length}`), ' bewertet', avg !== null ? ` · Ø ${formatDecimal(avg, 2)}` : '')),
+    h('div', { class: 'group-card__actions' },
+      cta,
+      h('a', { class: 'btn btn--icon', href: base, 'aria-label': `${g.name || 'Lerngruppe'} öffnen` }, icon('next'))));
 }
 
 function newGroupDialog() {
@@ -566,7 +634,7 @@ function newGroupDialog() {
           }
           await saveGroup(g);
           await createRound(g);
-          go(`gruppe/${g.id}/namen`);
+          go(`gruppe/${g.id}/schuelis`);
           return true;
         },
       },
@@ -632,51 +700,31 @@ async function renderGroup(g) {
   const avg = grades.length ? grades.reduce((x, y) => x + y, 0) / grades.length : null;
   const firstOpen = students.find((s) => statusFor(r, getAssessment(r.id, s.id)) !== 'done') || students[0];
 
-  const main = h('main', { class: 'main' },
-    h('div', { class: 'round-bar' },
-      h('span', { class: 'label' }, 'Bewertungsrunde'),
-      roundSelect,
-      h('button', { class: 'btn', type: 'button', onclick: async () => {
-        try { await createRound(g); toast('Neue Runde angelegt.'); } catch (e) { toast(e.message, { duration: 6000 }); }
-        render();
-      } }, icon('plus'), 'Neue Runde'),
-      h('button', { class: 'btn btn--icon', type: 'button', 'aria-label': 'Runde umbenennen', onclick: async () => {
-        const t = await promptDialog({ title: 'Runde umbenennen', label: 'Bezeichnung', value: r.title });
-        if (t) { r.title = t; await saveRound(r); render(); }
-      } }, icon('edit')),
-      rounds.length > 1 ? h('button', { class: 'btn btn--icon btn--danger', type: 'button', 'aria-label': 'Runde löschen', onclick: () => deleteRound(g, r) }, icon('trash')) : null),
-    h('p', { class: 'muted small', style: { margin: '-6px 0 14px' } }, 'Raster dieser Runde: ', h('a', { href: `#/raster/ansehen/${encodeURIComponent(r.rasterId)}` }, roundLabel(r)), ' · ',
-      h('a', { href: `#/gruppe/${g.id}/namen/raster` }, 'ändern')),
-  );
-
+  const main = h('main', { class: 'main' });
   if (!students.length) {
     main.append(h('div', { class: 'empty' },
       h('h2', null, 'Noch keine Namen in dieser Lerngruppe'),
       h('p', null, 'Füge Namen per CSV-Datei, eingefügter Liste oder einzeln hinzu.'),
-      h('a', { class: 'btn btn--primary btn--big', href: `#/gruppe/${g.id}/namen` }, icon('users'), 'Namen hinzufügen')));
+      h('a', { class: 'btn btn--primary btn--big', href: `#/gruppe/${g.id}/schuelis` }, icon('users'), 'Namen hinzufügen')));
   } else {
     main.append(
-      h('div', { class: 'row', style: { marginBottom: '14px' } },
-        h('p', { class: 'stats', style: { margin: 0 } },
-          h('span', null, h('b', null, counts.done), ' bewertet'),
-          h('span', null, h('b', null, counts.partial), ' angefangen'),
-          h('span', null, h('b', null, counts.open), ' offen'),
-          avg !== null ? h('span', null, 'Durchschnitt ', h('b', null, formatDecimal(avg, 2))) : null),
-        h('span', { class: 'spacer' }),
-        h('a', { class: 'btn btn--primary btn--big', href: `#/gruppe/${g.id}/bewerten/${firstOpen.id}` }, counts.done === students.length ? 'Bewertungen ansehen' : counts.done || counts.partial ? 'Weiter bewerten' : 'Bewertung starten')),
+      h('div', { class: 'panel summary' },
+        h('label', { class: 'summary__round' }, h('span', { class: 'label' }, 'Runde'), roundSelect),
+        h('p', { class: 'stats stats--big' },
+          h('span', null, h('b', null, counts.done), 'bewertet'),
+          h('span', null, h('b', null, counts.partial), 'angefangen'),
+          h('span', null, h('b', null, counts.open), 'offen'),
+          avg !== null ? h('span', null, h('b', null, formatDecimal(avg, 2)), 'Durchschnitt') : null),
+        h('a', { class: 'btn btn--accent btn--big', href: `#/gruppe/${g.id}/bewerten/${firstOpen.id}` },
+          counts.done === students.length ? 'Bewertungen ansehen' : counts.done || counts.partial ? 'Weiter bewerten' : 'Bewertung starten', icon('next'))),
+      h('p', { class: 'muted small', style: { margin: '0 0 14px' } }, 'Raster dieser Runde: ',
+        h('a', { href: `#/raster/ansehen/${encodeURIComponent(r.rasterId)}` }, roundLabel(r)), ' · Runden und Raster änderst du unter ',
+        h('a', { href: `#/gruppe/${g.id}/einrichten` }, 'Einrichten'), '.'),
       gridOf(ctx, g, r, students),
     );
   }
 
-  view(topbar({
-    back: '#/',
-    title: g.name,
-    subtitle: `${g.klasse ? `Klasse ${g.klasse} · ` : ''}${countLabel(students.length)} · ${roundLabel(r)} · ${SCALE_LABELS[displayScale(g)]}`,
-    actions: [
-      h('a', { class: 'btn', href: `#/gruppe/${g.id}/namen` }, icon('gear'), h('span', null, 'Einstellungen')),
-      h('a', { class: 'btn btn--primary', href: `#/gruppe/${g.id}/export` }, icon('share'), h('span', null, 'Export')),
-    ],
-  }), main);
+  view(...groupHead(g, 'noten'), main);
 }
 
 async function deleteRound(g, r) {
@@ -702,20 +750,9 @@ async function deleteRound(g, r) {
 // Lerngruppe bearbeiten: Namen
 // ===========================================================================
 
-function renderGroupEdit(g, focus) {
-  document.title = `Namen – ${g.name}`;
+function renderGroupStudents(g) {
+  document.title = `Schülis – ${g.name}`;
   let mode = 'single';
-
-  const nameIn = h('input', { class: 'input', type: 'text', value: g.name || '', autocomplete: 'off' });
-  const klasseIn = h('input', { class: 'input', type: 'text', value: g.klasse || '', autocomplete: 'off' });
-  const saveMeta = debounce(async () => {
-    g.name = nameIn.value.trim() || g.name;
-    g.klasse = klasseIn.value.trim();
-    await saveGroup(g);
-  }, 400);
-  nameIn.addEventListener('input', saveMeta);
-  klasseIn.addEventListener('input', saveMeta);
-  cleanupView = () => saveMeta.flush();
 
   // --- Namen hinzufügen ---
   const single = h('input', { class: 'input', type: 'text', placeholder: 'z. B. Anna Müller oder Müller, Anna', autocomplete: 'off', autocapitalize: 'words', enterkeyhint: 'enter' });
@@ -785,34 +822,88 @@ function renderGroupEdit(g, focus) {
   refreshList();
 
   const main = h('main', { class: 'main' },
-    h('section', { class: 'section panel' },
-      h('div', { class: 'map-grid map-grid--wide' },
-        h('label', { class: 'field' }, h('span', null, 'Name der Lerngruppe'), nameIn),
-        h('label', { class: 'field' }, h('span', null, 'Klasse (für Schülibogen und Notenliste)'), klasseIn)),
-      h('div', { class: 'field', style: { marginBottom: 0 } },
-        h('span', null, 'Notenskala dieser Lerngruppe (Anzeige, Nachschärfen und Export)'),
-        scaleControls(g, async (key) => {
-          await saveGroup(g);
-          if (key === 'scale') toast(`Notenskala: ${SCALE_LABELS[displayScale(g)]}`, { duration: 1500 });
-        }),
-        h('p', { class: 'muted small', style: { margin: '8px 0 0' } }, 'Ein Wechsel wirkt sofort auf alle Runden dieser Lerngruppe. Nachgeschärfte Endnoten bleiben erhalten und werden in die neue Skala umgerechnet.'))),
-    rasterPanel(g),
-    h('section', { class: 'section' }, h('h2', null, 'Namen hinzufügen'), seg, paneBox),
+    h('section', { class: 'section panel' }, h('h2', null, 'Namen hinzufügen'), seg, paneBox),
     h('section', { class: 'section' }, h('h2', null, 'Schülis', countEl), listBox),
-    h('section', { class: 'section' },
-      h('button', { class: 'btn btn--danger', type: 'button', onclick: () => deleteGroup(g) }, icon('trash'), 'Lerngruppe löschen')),
   );
 
-  view(topbar({
-    back: `#/gruppe/${g.id}`,
-    title: 'Einstellungen der Lerngruppe',
-    subtitle: g.name,
-    actions: [h('a', { class: 'btn btn--primary', href: `#/gruppe/${g.id}` }, 'Fertig')],
-  }), main);
-  if (focus === 'raster') {
-    const sec = document.getElementById('raster-section');
-    if (sec) requestAnimationFrame(() => sec.scrollIntoView({ block: 'start' }));
-  }
+  view(...groupHead(g, 'schuelis'), main);
+}
+
+async function renderGroupSetup(g) {
+  await ensureRound(g);
+  document.title = `Einrichten – ${g.name}`;
+
+  const nameIn = h('input', { class: 'input', type: 'text', value: g.name || '', autocomplete: 'off' });
+  const klasseIn = h('input', { class: 'input', type: 'text', value: g.klasse || '', autocomplete: 'off' });
+  const saveMeta = debounce(async () => {
+    g.name = nameIn.value.trim() || g.name;
+    g.klasse = klasseIn.value.trim();
+    await saveGroup(g);
+  }, 400);
+  nameIn.addEventListener('input', saveMeta);
+  klasseIn.addEventListener('input', saveMeta);
+  nameIn.addEventListener('change', async () => { await saveMeta.flush(); render(); });
+  klasseIn.addEventListener('change', async () => { await saveMeta.flush(); render(); });
+  cleanupView = () => saveMeta.flush();
+
+  const main = h('main', { class: 'main' },
+    h('div', { class: 'setup-grid' },
+      h('div', null,
+        h('section', { class: 'section panel' },
+          h('h2', null, 'Gruppe'),
+          h('div', { class: 'map-grid map-grid--wide' },
+            h('label', { class: 'field' }, h('span', null, 'Name der Lerngruppe'), nameIn),
+            h('label', { class: 'field' }, h('span', null, 'Klasse (für Schülibogen und Notenliste)'), klasseIn)),
+          h('div', { class: 'field', style: { marginBottom: 0 } },
+            h('span', null, 'Notenskala dieser Lerngruppe (Anzeige, Nachschärfen und Export)'),
+            scaleControls(g, async (key) => {
+              await saveGroup(g);
+              if (key === 'scale') toast(`Notenskala: ${SCALE_LABELS[displayScale(g)]}`, { duration: 1500 });
+            }),
+            h('p', { class: 'muted small', style: { margin: '8px 0 0' } }, 'Ein Wechsel wirkt sofort auf alle Runden dieser Lerngruppe. Nachgeschärfte Endnoten bleiben erhalten und werden in die neue Skala umgerechnet.'))),
+        roundsPanel(g)),
+      h('div', null,
+        rasterPanel(g),
+        h('section', { class: 'section' },
+          h('button', { class: 'btn btn--danger', type: 'button', onclick: () => deleteGroup(g) }, icon('trash'), 'Lerngruppe löschen')))),
+  );
+
+  view(...groupHead(g, 'einrichten'), main);
+}
+
+/** Alle Runden einer Lerngruppe: auswählen, anlegen, umbenennen, löschen. */
+function roundsPanel(g) {
+  const cur = currentRound(g);
+  const rounds = roundsOf(g.id);
+  const total = (g.students || []).length;
+  const rows = rounds.map((x) => {
+    const done = [...state.assessments.values()].filter((a) => a.roundId === x.id && statusFor(x, a) === 'done').length;
+    const isCur = cur && x.id === cur.id;
+    return h('div', { class: `round-row${isCur ? ' is-current' : ''}` },
+      h('div', { class: 'round-row__text' },
+        h('b', null, x.title, isCur ? h('span', { class: 'badge badge--solid' }, 'aktuell') : null),
+        h('span', { class: 'muted small' }, `${roundLabel(x)} · ${done} von ${total} bewertet`)),
+      isCur ? null : h('button', { class: 'btn', type: 'button', onclick: async () => {
+        g.currentRoundId = x.id;
+        await saveGroup(g);
+        render();
+      } }, 'Auswählen'),
+      h('button', { class: 'btn btn--icon', type: 'button', 'aria-label': `Runde ${x.title} umbenennen`, onclick: async () => {
+        const t = await promptDialog({ title: 'Runde umbenennen', label: 'Bezeichnung', value: x.title });
+        if (t) { x.title = t; await saveRound(x); render(); }
+      } }, icon('edit')),
+      rounds.length > 1 ? h('button', { class: 'btn btn--icon btn--danger', type: 'button', 'aria-label': `Runde ${x.title} löschen`, onclick: () => deleteRound(g, x) }, icon('trash')) : null);
+  });
+  return h('section', { class: 'section panel' },
+    h('div', { class: 'row', style: { marginBottom: '10px' } },
+      h('h2', { class: 'h2', style: { margin: 0 } }, 'Runden'),
+      h('span', { class: 'spacer' }),
+      h('button', { class: 'btn', type: 'button', onclick: async () => {
+        try { await createRound(g); toast('Neue Runde angelegt.'); } catch (e) { toast(e.message, { duration: 6000 }); }
+        render();
+      } }, icon('plus'), 'Neue Runde')),
+    rows,
+    h('p', { class: 'muted small', style: { margin: '10px 0 0' } }, 'Eine neue Runde heißt zunächst wie das heutige Datum. Über den Stift kannst du sie umbenennen.'));
 }
 
 function rasterPanel(g) {
@@ -1269,7 +1360,7 @@ async function renderExport(g) {
           h('button', { class: 'btn', type: 'button', onclick: () => setAll([]) }, 'Keine'))),
       pick),
     h('p', { class: 'muted small' }, `Raster: ${roundLabel(r)}. Noten erscheinen in ${scaleName} – einstellbar für diese Lerngruppe unter `,
-      h('a', { href: `#/gruppe/${g.id}/namen` }, 'Einstellungen der Lerngruppe'), `. Runde: ${r.title}.`),
+      h('a', { href: `#/gruppe/${g.id}/einrichten` }, 'Einrichten'), `. Runde: ${r.title}.`),
     h('div', { class: 'export-grid' },
       h('section', { class: 'panel export-card' },
         h('h3', null, 'Notenliste'),
@@ -1291,7 +1382,7 @@ async function renderExport(g) {
           h('button', { class: 'btn btn--primary', type: 'button', onclick: () => exportSheetsPrint(perPage) }, icon('print'), 'Druckansicht öffnen')))),
   );
 
-  view(topbar({ back: `#/gruppe/${g.id}`, title: 'Exportieren', subtitle: `${g.name} · ${r.title}` }), main);
+  view(...groupHead(g, 'export'), main);
 }
 
 // ===========================================================================
@@ -1341,12 +1432,11 @@ function renderSettings() {
   const main = h('main', { class: 'main', style: { maxWidth: '860px' } },
     h('section', { class: 'section panel' },
       h('h2', null, 'Bewertungsraster'),
-      h('p', { class: 'muted small', style: { marginTop: 0 } }, 'Fachschaftsraster ansehen, eigene Raster importieren (z. B. mit Hilfe einer KI) oder bearbeiten. Welches Raster gilt, legst du pro Lerngruppe fest; Gewichtungen ebenfalls dort.'),
-      h('div', { class: 'btn-group', style: { marginBottom: '12px' } }, h('a', { class: 'btn btn--primary', href: '#/raster' }, 'Raster verwalten')),
+      h('p', { class: 'muted small', style: { marginTop: 0 } }, 'Welches Raster gilt, legst du pro Lerngruppe unter „Einrichten“ fest; Gewichtungen ebenfalls dort. Alle Raster findest du links unter „Raster“.'),
       h('label', { class: 'field' }, h('span', null, 'Standardraster für neue Lerngruppen'), defSel)),
     h('section', { class: 'section panel' },
       h('h2', null, 'Notenskala für neue Lerngruppen'),
-      h('p', { class: 'muted small', style: { marginTop: 0 } }, 'Jede Lerngruppe hat ihre eigene Skala – einstellbar beim Anlegen und in den Einstellungen der Lerngruppe. Hier legst du fest, womit neue Lerngruppen starten.'),
+      h('p', { class: 'muted small', style: { marginTop: 0 } }, 'Jede Lerngruppe hat ihre eigene Skala – einstellbar beim Anlegen und in der Lerngruppe unter „Einrichten“. Hier legst du fest, womit neue Lerngruppen starten.'),
       scaleControls(S, () => saveSettings()),
       h('p', { class: 'muted small' }, 'Viertelnoten: 1 / 1- / 1-2 / 2+ / 2 … Notenpunkte: 17 − 3 × Note, gerundet (15 P ≙ 1+, 14 P ≙ 1, 13 P ≙ 1- …). Exakte Mitten werden zugunsten des Schülis gerundet.')),
     h('section', { class: 'section panel' },
@@ -1369,7 +1459,7 @@ function renderSettings() {
     h('p', { class: 'muted small', style: { textAlign: 'center' } },
       `${APP_NAME} ${APP_VERSION} · funktioniert offline · kein Server, kein Tracking · vibe coded by Verena Lohmüller & Claude · Lizenz CC BY-NC-SA 4.0. Enthält docx (MIT) und Atkinson Hyperlegible (SIL OFL).`),
   );
-  view(topbar({ back: '#/', title: 'Einstellungen' }), main);
+  view(topbar({ title: 'Einstellungen' }), main);
 }
 
 async function exportBackup() {
@@ -1522,6 +1612,7 @@ const ctx = {
   go,
   render,
   view,
+  viewBare,
   topbar,
   setCleanup: (fn) => { cleanupView = fn; },
   getAssessment,
