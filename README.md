@@ -60,17 +60,17 @@ Alle Daten liegen nur im Speicher dieser App auf dem iPad. Wird die App gelösch
 
 **Lerngruppe anlegen** – Name (z. B. „Bio 8b“), Klasse (erscheint auf Schülibogen und Notenliste), **Bewertungsraster** und **Notenskala**. Mit **Beispielgruppe ausprobieren** kannst du alles gefahrlos testen und die Gruppe danach löschen.
 
-**Bewertungsraster pro Lerngruppe** – Beim Anlegen und jederzeit über **Einstellungen** in der Lerngruppe (oder den Link „ändern“ neben „Raster dieser Runde“) wählst du ein Fachschaftsraster oder ein eigenes Raster. Jede Bewertungsrunde merkt sich die genaue Fassung ihres Rasters: Ändert sich ein Raster später (neue Fachschaftsfassung oder eigene Bearbeitung), bleiben bestehende Noten und Bögen unverändert. Ein neues Raster gilt sofort, solange die aktuelle Runde noch keine Bewertungen hat, sonst ab der nächsten Runde. Ebenfalls in den **Einstellungen der Lerngruppe**: die **Gewichtung** der Kriterien (bei Raster mit Mittelwert) und die **Umrechnung** (bei Punkte-Rastern mit mehreren Umrechnungstabellen, z. B. Kunst „Klasse 5-10“ / „Kursstufe“).
+**Bewertungsraster pro Lerngruppe** – Beim Anlegen und jederzeit im Reiter **Einrichten** der Lerngruppe wählst du ein Fachschaftsraster oder ein eigenes Raster. Jede Bewertungsrunde merkt sich die genaue Fassung ihres Rasters: Ändert sich ein Raster später (neue Fachschaftsfassung oder eigene Bearbeitung), bleiben bestehende Noten und Bögen unverändert. Ein neues Raster gilt sofort, solange die aktuelle Runde noch keine Bewertungen hat, sonst ab der nächsten Runde. Ebenfalls unter **Einrichten**: die **Gewichtung** der Kriterien (bei Raster mit Mittelwert) und die **Umrechnung** (bei Punkte-Rastern mit mehreren Umrechnungstabellen, z. B. Kunst „Klasse 5-10“ / „Kursstufe“).
 
-**Notenskala pro Lerngruppe** – Jede Lerngruppe hat ihre eigene Skala: **Viertelnoten**, **Notenpunkte** oder **beides** (dann zusätzlich wählbar, ob in Viertelnoten- oder Punkteschritten nachgeschärft wird). So kann z. B. „Bio 8b“ mit Viertelnoten und „Bio J1“ mit Notenpunkten arbeiten. Die Skala legst du beim Anlegen fest und änderst sie jederzeit in den **Einstellungen** der Lerngruppe. Sie gilt für Anzeige, Nachschärfen, Notenliste und Schülibögen dieser Gruppe. Nachgeschärfte Endnoten bleiben bei einem Wechsel erhalten und werden umgerechnet. In den **Einstellungen** bestimmst du nur, mit welcher Skala neue Lerngruppen starten.
+**Notenskala pro Lerngruppe** – Jede Lerngruppe hat ihre eigene Skala: **Viertelnoten**, **Notenpunkte** oder **beides** (dann zusätzlich wählbar, ob in Viertelnoten- oder Punkteschritten nachgeschärft wird). So kann z. B. „Bio 8b“ mit Viertelnoten und „Bio J1“ mit Notenpunkten arbeiten. Die Skala legst du beim Anlegen fest und änderst sie jederzeit im Reiter **Einrichten** der Lerngruppe. Sie gilt für Anzeige, Nachschärfen, Notenliste und Schülibögen dieser Gruppe. Nachgeschärfte Endnoten bleiben bei einem Wechsel erhalten und werden umgerechnet. In den **Einstellungen** (Leiste links) bestimmst du nur, mit welcher Skala neue Lerngruppen starten.
 
-**Namen eintragen** – drei Wege, beliebig kombinierbar; doppelte Namen werden erkannt:
+**Namen eintragen** – im Reiter **Schülis** der Lerngruppe, drei Wege, beliebig kombinierbar; doppelte Namen werden erkannt:
 
 - **Einzeln:** „Anna Müller“ oder „Müller, Anna“ eintippen oder mit dem Apple Pencil hineinschreiben (Scribble), Eingabetaste – fertig, das Feld bleibt für den nächsten Namen offen.
 - **Liste einfügen:** ein Name pro Zeile, z. B. aus einer Mail oder direkt aus Excel kopiert (zwei Spalten Nachname/Vorname werden erkannt).
 - **CSV-Datei:** Semikolon oder Komma, mit oder ohne Kopfzeile, Nachname/Vorname getrennt oder in einer Spalte. Nummern- und Zusatzspalten werden übersprungen. In der Vorschau kannst du die Spalten korrigieren.
 
-**Bewertungsrunden** – Jede Lerngruppe kann mehrere Runden haben (Vorschlag: „1. Halbjahr 2026/27“). So bleiben frühere mündliche Noten erhalten. Runde wählen, umbenennen oder neu anlegen in der Übersicht.
+**Bewertungsrunden** – Jede Lerngruppe kann mehrere Runden haben. Eine neue Runde heißt zunächst wie das aktuelle Datum (z. B. „13.11.2026“) und lässt sich umbenennen. So bleiben frühere mündliche Noten erhalten. Die Runde wechselst du im Reiter **Noten**; anlegen, umbenennen und löschen im Reiter **Einrichten**.
 
 **Bewerten**
 
@@ -212,6 +212,8 @@ Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export (19 Tests) sowie 
 **Lizenzen** – docx © Dolan, MIT-Lizenz (`vendor/LICENSE-docx.txt`); Atkinson Hyperlegible © Braille Institute of America, SIL Open Font License 1.1 (`vendor/fonts/OFL-Atkinson-Hyperlegible.txt`).
 
 ## Versionen
+
+- **1.5.0** – Neues Design „Tafel und Kreide“ (Tafelgrün, Kreidegelb) mit passendem Dunkelmodus. Feste Navigation links: Lerngruppen, Raster, Einstellungen. In der Lerngruppe gibt es die Reiter Noten, Schülis, Einrichten und Export; Runden werden unter „Einrichten“ verwaltet. Auf der Startseite führt ein Knopf direkt zum Bewerten. Neue Runden heißen standardmäßig wie das aktuelle Datum. Die Bewerten-Ansicht ist im Aufbau unverändert.
 
 - **1.4.2** – Neues Raster „Gemeinschaftskunde (ee26)“ (Kopie des Geographie-Rasters). Bei „Mathe 5/6 (ee26)“ ist der Hinweis „(Clas)“ aus dem Titel entfernt.
 

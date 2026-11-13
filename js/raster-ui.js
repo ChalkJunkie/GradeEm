@@ -129,7 +129,7 @@ export function renderRasterLibrary(ctx) {
       h('p', { class: 'muted small', style: { marginTop: 0 } }, 'Diese Raster liegen im Repository im Ordner „raster“ und werden mit jeder neuen Version der App aktualisiert.'),
       fsList),
   );
-  ctx.view(ctx.topbar({ back: '#/einstellungen', title: 'Bewertungsraster' }), main);
+  ctx.view(ctx.topbar({ title: 'Raster', subtitle: 'Welches Raster gilt, legst du in der Lerngruppe unter „Einrichten“ fest.' }), main);
   // Für die Pflege: Sind die Rasterdateien im Repository abrufbar?
   const probe = ctx.state.fsIndex[0];
   if (probe && navigator.onLine) {

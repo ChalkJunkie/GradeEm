@@ -29,26 +29,28 @@ Grade'Em (früher „TardiGrader“) ist eine HTML-basierte WebApp fürs iPad. L
 - Andere Schulen und einzelne Kolleg:innen sollen eigene Raster nutzen können.
 - Dafür ist ein Editor in der App gewünscht. Copy-Paste aus Word fällt am iPad vielen schwer, deshalb soll die Eingabe einfach sein (z. B. Zeile für Zeile, ohne Formatierungsübernahme).
 
-## Redesign (in Planung, Stand 13.11.2026)
+## Design (umgesetzt in Version 1.5.0)
 
-Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf „Tafel“). Noch nicht umgesetzt.
+Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf 1 „Tafel“).
 
-- Gut befunden: Startseite, Ansicht der Lerngruppe (Noten) und „Lerngruppe einrichten“.
-- Feste Navigation links (Lerngruppen, Raster, Einstellungen); in der Lerngruppe Reiter Noten, Schülis, Einrichten, Export; Runden werden an einer Stelle in „Einrichten“ verwaltet.
+- Farbwelt „Tafel und Kreide“: Tafelgrün (`#1E3932`) als Hauptfarbe, Kreidegelb (`#F4C542`) für die wichtigste Aktion, helles Grau (`#F2F4F1`) als Grund. Schrift bleibt Atkinson Hyperlegible.
+- Dunkelmodus: Farben vertauscht, sehr dunkles Tafelgrün (`#142722`) als Hintergrund, Kreideweiß als Schrift, Kreidegelb bleibt Akzent.
+- Feste Navigation links (Lerngruppen, Raster, Einstellungen), ohne Logo-Kästchen. Auf schmalen Bildschirmen liegt sie unten.
+- In der Lerngruppe die Reiter Noten, Schülis, Einrichten, Export. Runden werden an einer Stelle unter „Einrichten“ verwaltet.
 - Schneller zum Bewerten: Jede Lerngruppe auf der Startseite hat einen direkten Knopf „Weiter bewerten“ bzw. „Bewertung starten“.
-- Die Bewerten-Ansicht behält ihren bisherigen Aufbau (Tabelle mit allen Kriterien), weil ein Kriterium pro Bildschirm nicht für alle Raster funktioniert.
-- Kein eigenes Logo-Kästchen („G’“) in der Navigation.
-- Farben von Entwurf 1 („Tafel“: Tafelgrün, Kreidegelb als Akzent, helles Grau) und die Navigationsleiste links bleiben. Schrift bleibt Atkinson Hyperlegible.
-- Dunkelmodus (Vorschlag, Mockup liegt vor): Farben vertauscht, sehr dunkles Tafelgrün (`#142722`) als Hintergrund, Kreideweiß als Schrift, Kreidegelb bleibt Akzent.
-- Verworfen: Look im Stil von shadcn/ui; Seat'Em-Stil mit Menüzeile oben (Entwurf 3).
-
-## Vorgemerkt
-
+- Die Bewerten-Ansicht behält ihren bisherigen Aufbau (Tabelle mit allen Kriterien, ohne Navigation links), weil ein Kriterium pro Bildschirm nicht für alle Raster funktioniert.
 - Der Standardname einer neuen Runde ist immer das aktuelle Datum.
+- Verworfen: Look im Stil von shadcn/ui; Seat'Em-Stil mit Menüzeile oben.
 
 ## Technische Struktur
 
-(Wird beim ersten Durchlauf von Claude Code ergänzt: Dateien, Datenformat der Raster, wo neue Raster eingetragen werden, wie die App veröffentlicht wird.)
+- Kein Build-Schritt: `index.html`, `css/app.css` und ES-Module in `js/`. Veröffentlicht wird über GitHub Pages aus dem Branch `main` (Datei `.nojekyll` muss vorhanden sein).
+- `js/app.js`: Zustand, Navigation (Adressen `#/…`), Startseite, Lerngruppe (Reiter), Export, Einstellungen. `js/rate-view.js`: Bewerten. `js/raster-ui.js`: Raster-Übersicht und Editor. `js/ui.js`: kleine UI-Hilfen und Symbole.
+- Farben stehen als CSS-Variablen am Anfang von `css/app.css` (hell und dunkel); die Stile für Navigation, Reiter und Karten stehen am Ende der Datei.
+- Raster: eine Markdown-Datei pro Raster in `raster/` (Format in `raster/FORMAT.md`), Verzeichnis in `raster/index.json`, eingebaute Kopie in `js/raster-builtin.js`. Ein neues Raster muss an allen drei Stellen eingetragen werden.
+- Daten der Lehrkraft liegen nur im Browser (IndexedDB, `js/db.js`).
+- Bei einer neuen Version die Nummer an drei Stellen ändern: `APP_VERSION` in `js/app.js`, `CACHE_VERSION` in `sw.js`, Abschnitt „Versionen“ in `README.md`.
+- Tests: `node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs`.
 
 ## Arbeitsweise
 
