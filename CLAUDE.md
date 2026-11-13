@@ -29,6 +29,21 @@ Grade'Em (früher „TardiGrader“) ist eine HTML-basierte WebApp fürs iPad. L
 - Andere Schulen und einzelne Kolleg:innen sollen eigene Raster nutzen können.
 - Dafür ist ein Editor in der App gewünscht. Copy-Paste aus Word fällt am iPad vielen schwer, deshalb soll die Eingabe einfach sein (z. B. Zeile für Zeile, ohne Formatierungsübernahme).
 
+## Redesign (in Planung, Stand 13.11.2026)
+
+Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf „Tafel“). Noch nicht umgesetzt.
+
+- Gut befunden: Startseite, Ansicht der Lerngruppe (Noten) und „Lerngruppe einrichten“.
+- Feste Navigation links (Lerngruppen, Raster, Einstellungen); in der Lerngruppe Reiter Noten, Schülis, Einrichten, Export; Runden werden an einer Stelle in „Einrichten“ verwaltet.
+- Schneller zum Bewerten: Jede Lerngruppe auf der Startseite hat einen direkten Knopf „Weiter bewerten“ bzw. „Bewertung starten“.
+- Die Bewerten-Ansicht behält ihren bisherigen Aufbau (Tabelle mit allen Kriterien), weil ein Kriterium pro Bildschirm nicht für alle Raster funktioniert.
+- Kein eigenes Logo-Kästchen („G’“) in der Navigation.
+- Verworfen: Look im Stil von shadcn/ui.
+
+## Vorgemerkt
+
+- Der Standardname einer neuen Runde ist immer das aktuelle Datum.
+
 ## Technische Struktur
 
 (Wird beim ersten Durchlauf von Claude Code ergänzt: Dateien, Datenformat der Raster, wo neue Raster eingetragen werden, wie die App veröffentlicht wird.)
