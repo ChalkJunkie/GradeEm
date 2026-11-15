@@ -6,7 +6,7 @@ import * as db from './db.js';
 import { describeGrade, formatDecimal } from './grades.js';
 import { analyzeNameText, extractNames, splitName, nameKey, buildCSV } from './csv.js';
 import {
-  buildSheet, buildGradeList, gradeListTable, roundsTable, studentName, compareStudents, todayISO, formatDate, klasseOf, weightsText,
+  buildSheet, sheetForm, buildGradeList, gradeListTable, roundsTable, studentName, compareStudents, todayISO, formatDate, klasseOf, weightsText,
 } from './sheet-data.js';
 import {
   h, icon, toast, openDialog, confirmDialog, promptDialog, offerFile, safeFileName, debounce, uid,
@@ -19,7 +19,7 @@ import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD, BUILTIN_INDEX, BUILTIN_RASTER 
 import { renderRate, studentGrid as gridOf } from './rate-view.js';
 import { renderRasterLibrary, renderRasterView, renderRasterEditor, rasterSelect } from './raster-ui.js';
 
-export const APP_VERSION = '1.6.0';
+export const APP_VERSION = '1.6.1';
 export const APP_NAME = 'Grade’Em';
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de';
 
@@ -1277,7 +1277,7 @@ async function renderExport(g) {
     return true;
   };
   const scale = displayScale(g);
-  const sheetsFor = () => chosen().map((s) => buildSheet({ student: s, group: g, round: r, raster, assessment: byStudent.get(s.id), scale }));
+  const sheetsFor = () => chosen().map((s) => buildSheet({ student: s, group: g, round: r, raster, assessment: byStudent.get(s.id), scale, form: g.sheetForm }));
   const baseName = safeFileName(`${klasseOf(g) || g.name}_${r.title}`);
   const scaleName = { quarter: 'Viertelnoten', points: 'Notenpunkten', both: 'Viertelnoten und Notenpunkten' }[scale];
   // --- Notenliste: Inhalt, Runden, Anordnung ---
@@ -1408,6 +1408,16 @@ async function renderExport(g) {
     } }, `${n} pro Seite`));
   }
 
+  // Bogenform der Schülibögen (pro Lerngruppe gespeichert; Noten und Raster bleiben unverändert)
+  const formField = raster.meta.typ === 'matrix' ? null : h('div', { class: 'field sheet-form' },
+    h('span', null, 'Bogenform der Schülibögen'),
+    pickSeg([['kompakt', 'Kreuzliste'], ['vollstaendig', 'Alle Beschreibungen']], sheetForm(raster, g.sheetForm), async (v) => {
+      g.sheetForm = v;
+      await saveGroup(g);
+      toast(v === 'kompakt' ? 'Bogenform: Kreuzliste' : 'Bogenform: Alle Beschreibungen', { duration: 1500 });
+    }),
+    h('p', { class: 'muted small', style: { margin: 0 } }, `Kreuzliste: beste und schwächste Beschreibung, dazwischen Kreuze. Alle Beschreibungen: das ganze Raster, Zutreffendes markiert. Im Raster „${roundLabel(r)}“ vorgesehen: ${raster.meta.schuelibogen === 'kompakt' ? 'Kreuzliste' : 'Alle Beschreibungen'}. Gilt für PDF, Word und Mehrfachdruck.`));
+
   const main = h('main', { class: 'main' },
     h('section', { class: 'section panel' },
       h('div', { class: 'row' },
@@ -1421,6 +1431,7 @@ async function renderExport(g) {
     listPanel,
     h('p', { class: 'muted small' }, `Schülibögen gelten für die aktuelle Runde „${r.title}“ (Raster: ${roundLabel(r)}). Noten erscheinen in ${scaleName} – einstellbar für diese Lerngruppe unter `,
       h('a', { href: `#/gruppe/${g.id}/einrichten` }, 'Einrichten'), '.'),
+    formField,
     h('div', { class: 'export-grid' },
       h('section', { class: 'panel export-card' },
         h('h3', null, 'Schülibögen'),

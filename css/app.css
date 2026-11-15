@@ -1701,6 +1701,20 @@ body.is-printing .app {
   white-space: nowrap;
 }
 
+.sheet-form {
+  margin: 0 0 14px;
+}
+
+.sheet-form .seg {
+  display: inline-flex;
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.sheet-form .seg button {
+  white-space: nowrap;
+}
+
 .round-picks {
   display: flex;
   flex-wrap: wrap;

@@ -49,6 +49,10 @@ Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf 1 „Tafel“).
 - Mehrere Runden in einer Liste: „Pro Klasse“ (eine Spalte je Runde bzw. ein Abschnitt je Runde mit Kriterien) oder „Pro Schüli“ (ein Abschnitt je Schüli, eine Zeile je Runde).
 - Kein Durchschnitt über mehrere Runden in der Liste; sie zeigt nur die einzelnen Endnoten.
 
+## Schülibögen
+
+- Die Bogenform („Kreuzliste“ = kompakt oder „Alle Beschreibungen“) ist pro Lerngruppe auf der Export-Seite wählbar (`g.sheetForm`). Ohne Wahl gilt die Angabe `schuelibogen` im Raster. Matrix-Raster haben eine eigene Form. Die Wahl ändert nur die Darstellung, nicht Noten oder Raster.
+
 ## Technische Struktur
 
 - Kein Build-Schritt: `index.html`, `css/app.css` und ES-Module in `js/`. Veröffentlicht wird über GitHub Pages aus dem Branch `main` (Datei `.nojekyll` muss vorhanden sein).

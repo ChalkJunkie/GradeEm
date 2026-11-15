@@ -6,7 +6,7 @@
  *   • Notenliste (A4 hoch oder quer, mehrere Seiten; eine oder mehrere Runden)
  * und eine Rasterübersicht für die Vorschau in der App.
  *
- * Bogenformen je nach Raster: kompakt (beste/schwächste Beschreibung + Kreuzspalten),
+ * Bogenformen je nach Raster bzw. Wahl der Lerngruppe: kompakt (beste/schwächste Beschreibung + Kreuzspalten),
  * vollständig (alle Beschreibungen, Auswahl markiert) und Matrix.
  *
  * Die Druckseite hat keinen Rand (@page margin 0). Dadurch fügt der Browser keine
@@ -142,7 +142,7 @@ export function sheetHTML(s, { variant = 'full' } = {}) {
   if (!compact && r.einleitung) parts.push(`<div class="sheet__intro">${parasHTML(r.einleitung)}</div>`);
   parts.push(headHTML(s));
   if (m.typ === 'matrix') parts.push(matrixTable(s));
-  else if (m.schuelibogen === 'kompakt') parts.push(kompaktTable(s));
+  else if ((s.form || m.schuelibogen) === 'kompakt') parts.push(kompaktTable(s));
   else parts.push(fullTable(s));
   if (m.typ !== 'matrix' && m.wertung === 'summe') parts.push(`<p class="sheet__sum">${esc(sumText(s))}</p>`);
   parts.push(commentsHTML(s));
