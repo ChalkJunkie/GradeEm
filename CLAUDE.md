@@ -42,6 +42,12 @@ Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf 1 „Tafel“).
 - Der Standardname einer neuen Runde ist immer das aktuelle Datum.
 - Verworfen: Look im Stil von shadcn/ui; Seat'Em-Stil mit Menüzeile oben.
 
+## Notenliste (umgesetzt in Version 1.6.0)
+
+- Die Notenliste darf nie abgeschnitten werden. Bei mehr als 11 Spalten wird sie quer gedruckt, Kriteriennamen und Schülinamen dürfen umbrechen, notfalls wird die Schrift kleiner (bis 6,5 pt). Die Seitenaufteilung (`layoutLists` in `js/print.js`) prüft jede Seite, bis sie passt.
+- Inhalt wählbar: „Mit allen Kriterien“ oder „Nur Endnote“ (für PDF und CSV).
+- Mehrere Runden in einer Liste: „Pro Klasse“ (eine Spalte je Runde bzw. ein Abschnitt je Runde mit Kriterien) oder „Pro Schüli“ (ein Abschnitt je Schüli, eine Zeile je Runde).
+
 ## Technische Struktur
 
 - Kein Build-Schritt: `index.html`, `css/app.css` und ES-Module in `js/`. Veröffentlicht wird über GitHub Pages aus dem Branch `main` (Datei `.nojekyll` muss vorhanden sein).
@@ -50,7 +56,7 @@ Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf 1 „Tafel“).
 - Raster: eine Markdown-Datei pro Raster in `raster/` (Format in `raster/FORMAT.md`), Verzeichnis in `raster/index.json`, eingebaute Kopie in `js/raster-builtin.js`. Ein neues Raster muss an allen drei Stellen eingetragen werden.
 - Daten der Lehrkraft liegen nur im Browser (IndexedDB, `js/db.js`).
 - Bei einer neuen Version die Nummer an drei Stellen ändern: `APP_VERSION` in `js/app.js`, `CACHE_VERSION` in `sw.js`, Abschnitt „Versionen“ in `README.md`.
-- Tests: `node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs`.
+- Tests: `node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs tests/notenliste.test.mjs`.
 
 ## Arbeitsweise
 

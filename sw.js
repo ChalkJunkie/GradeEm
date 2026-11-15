@@ -2,7 +2,7 @@
    Legt alle App-Dateien beim ersten Aufruf im Cache ab; danach läuft die App
    vollständig offline. Bei einer neuen Version CACHE_VERSION erhöhen. */
 
-const CACHE_VERSION = 'gradeem-v1.5.0';
+const CACHE_VERSION = 'gradeem-v1.6.0';
 
 const APP_FILES = [
   './',

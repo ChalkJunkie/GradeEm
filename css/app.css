@@ -1554,24 +1554,49 @@ body.is-printing .app {
   gap: 0.8em;
 }
 
-/* Notenliste */
+/* Notenliste – die Schrift wird bei breiten Tabellen über --list-fs verkleinert */
 .list-sheet {
-  font-size: 10pt;
+  font-size: var(--list-fs, 10pt);
   line-height: 1.3;
   padding: 0;
 }
 
 .list-sheet h1 {
-  font-size: 15pt;
+  font-size: 1.5em;
   margin: 0 0 1mm;
+}
+
+.list-sheet h2 {
+  font-size: 1.1em;
+  margin: 0 0 1.5mm;
+}
+
+.list-sheet .sub {
+  display: block;
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+.list-sheet h2 .sub {
+  display: inline;
+  margin-left: 2mm;
 }
 
 .list-sheet .list-meta {
   display: flex;
-  gap: 6mm;
+  gap: 1mm 6mm;
   flex-wrap: wrap;
   margin: 0 0 4mm;
-  font-size: 10pt;
+}
+
+.list-sheet .list-run {
+  margin: 0 0 3mm;
+  font-size: 0.85em;
+  color: #333;
+}
+
+.list-sheet .list-block + .list-block {
+  margin-top: 5mm;
 }
 
 .list-sheet table {
@@ -1582,7 +1607,7 @@ body.is-printing .app {
 .list-sheet th,
 .list-sheet td {
   border: 0.25mm solid #000;
-  padding: 1.4mm 1.8mm;
+  padding: 1.2mm 1.5mm;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -1590,14 +1615,30 @@ body.is-printing .app {
 .list-sheet th {
   background: #eee;
   font-weight: 700;
-  font-size: 9pt;
+  font-size: 0.9em;
+  -webkit-hyphens: auto;
+  hyphens: auto;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+}
+
+/* Lange Kriteriennamen und Schülinamen dürfen überall umbrechen – so wird die Tabelle nie breiter als die Seite */
+.list-sheet th.kcol {
+  overflow-wrap: anywhere;
 }
 
 .list-sheet td.name,
 .list-sheet th.name {
   text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.list-sheet td.rd {
+  text-align: left;
+}
+
+.list-sheet td.crit-text {
+  font-size: 0.9em;
 }
 
 .list-sheet td.list-final {
@@ -1607,17 +1648,63 @@ body.is-printing .app {
 
 .list-sheet .adj {
   font-weight: 400;
-  font-size: 8pt;
+  font-size: 0.8em;
 }
 
 .list-sheet tbody tr {
   break-inside: avoid;
 }
 
+.list-sheet .list-note,
+.list-sheet .list-foot {
+  margin: 1.5mm 0 0;
+  font-size: 0.85em;
+  color: #333;
+}
+
 .list-sheet .list-foot {
   margin-top: 4mm;
-  font-size: 8.5pt;
+}
+
+.list-sheet .list-foot p {
+  margin: 0;
+}
+
+.list-pageno {
+  position: absolute;
+  right: 10mm;
+  bottom: 3.5mm;
+  font-size: 8pt;
   color: #333;
+}
+
+/* Export: Optionen der Notenliste */
+.list-options {
+  display: grid;
+  gap: 14px;
+  margin: 4px 0 14px;
+}
+
+.list-options .field {
+  margin: 0;
+}
+
+.list-options .seg {
+  display: inline-flex;
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.list-options .seg button {
+  flex: none;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+.round-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 18px;
 }
 
 /* ---------- Druck ---------- */

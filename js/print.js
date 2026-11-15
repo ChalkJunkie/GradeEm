@@ -3,7 +3,7 @@
  * =========================
  * Erzeugt druckfertige Seiten (A4) für
  *   • Schülibögen: 1 pro Seite (A4 quer), 2 pro Seite (A4 hoch), 4 pro Seite (A4 quer, kompakt)
- *   • Notenliste (A4 hoch, mehrere Seiten)
+ *   • Notenliste (A4 hoch oder quer, mehrere Seiten; eine oder mehrere Runden)
  * und eine Rasterübersicht für die Vorschau in der App.
  *
  * Bogenformen je nach Raster: kompakt (beste/schwächste Beschreibung + Kreuzspalten),
@@ -12,14 +12,14 @@
  * Die Druckseite hat keinen Rand (@page margin 0). Dadurch fügt der Browser keine
  * eigene Kopf-/Fußzeile (Adresse, Datum, Uhrzeit, Seitenzahl) hinzu. Den weißen Rand
  * legt jede .page selbst als Innenabstand an; die Notenliste wird dafür von der App
- * selbst auf Seiten verteilt (paginateLists).
+ * selbst auf Seiten verteilt (layoutLists).
  */
 import {
   STUDENT_NOTE_LABEL, STUDENT_DEFINITION_LABEL, GRADE_NAMES, DEFINITIONS, FOOTNOTE_TEXT, FOOTNOTE_URL,
 } from './rubric.js';
 import { cellParas, footnoteList } from './raster.js';
 import { pointsOf } from './engine.js';
-import { headerFields, sumText, critShort } from './sheet-data.js';
+import { headerFields, sumText, critShort, criteriaText } from './sheet-data.js';
 import { esc, richHTML, h, icon } from './ui.js';
 
 const MM = 96 / 25.4; // CSS-Pixel pro Millimeter
@@ -223,74 +223,320 @@ export function buildSheetPages(sheets, perPage = 1) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Notenliste
+// ---------------------------------------------------------------------------
+
+/** Ab dieser Spaltenzahl wird die Notenliste quer gedruckt. */
+const LIST_PORTRAIT_MAX_COLS = 11;
+
+const isSumme = (r) => r.meta.typ !== 'matrix' && r.meta.wertung === 'summe';
+const critN = (r) => (r.meta.typ === 'matrix' ? 2 : r.kriterien.length);
+
+function finalHeadCells(scale) {
+  return `${scale !== 'points' ? '<th>Endnote</th>' : ''}${scale !== 'quarter' ? '<th>Punkte</th>' : ''}`;
+}
+
+function finalCells(x, scale, extra = '') {
+  const q = scale !== 'points';
+  const p = scale !== 'quarter';
+  const adj = x.adjusted ? '<span class="adj"> *</span>' : '';
+  return `${q ? `<td class="list-final">${esc(x.finalQuarter)}${adj}</td>` : ''}${p ? `<td class="list-final">${esc(x.finalPoints)}${q ? '' : adj}</td>` : ''}${extra}`;
+}
+
+/** Erklärung unter einer Tabelle mit Kriterien. */
+function explainText(r, weightsNote) {
+  if (r.meta.typ === 'matrix') return 'Zeile/Spalte: gewählte Einschätzungen im Raster; berechnet: Mitte des Notenbereichs der Zelle.';
+  if (isSumme(r)) return `Punkte je Kriterium; Note aus der Summe laut Umrechnungstabelle${weightsNote ? ` (${esc(weightsNote)})` : ''}.`;
+  return `Zeilenwerte: Mittelwert der markierten Stufen. Berechnete Note: gewichteter Mittelwert${weightsNote ? ` (${esc(weightsNote)})` : ''}.`;
+}
+
+/** Tabelle einer Runde mit allen Kriterien. */
+function roundTableHTML(list, r, scale) {
+  const q = scale !== 'points';
+  const summe = isSumme(r);
+  const n = critN(r);
+  const crit = Array.from({ length: n }, (_, i) => `<th class="kcol">${esc(critShort(r, i))}</th>`).join('');
+  const head = `<tr><th>Nr.</th><th class="name">Name</th><th>Datum</th>${crit}${summe ? '<th>Summe</th>' : ''}<th>berechnet</th>${finalHeadCells(scale)}</tr>`;
+  const rows = list.map((x, i) => {
+    const calc = x.proposalDecimal ? `${x.proposalDecimal}${q ? ` (${esc(x.proposalQuarter)})` : ` (${x.proposalPoints} P)`}` : '';
+    return `<tr><td>${i + 1}</td><td class="name">${esc(x.name)}</td><td>${esc(x.datum)}</td>
+      ${x.rowTexts.map((t) => `<td>${esc(t)}</td>`).join('')}
+      ${summe ? `<td>${esc(x.sum)}</td>` : ''}
+      <td>${calc}${x.proposalDecimal && !x.complete ? '<span class="adj"> (unvollst.)</span>' : ''}</td>
+      ${finalCells(x, scale)}</tr>`;
+  }).join('');
+  const cols = 3 + n + (summe ? 1 : 0) + 1 + (q ? 1 : 0) + (scale !== 'quarter' ? 1 : 0);
+  return { html: `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`, cols };
+}
+
+/** Übersicht nur mit Endnoten: eine Zeile je Schüli, Spalten je Runde. */
+function overviewTableHTML(rounds, scale) {
+  const k = (scale !== 'points' ? 1 : 0) + (scale !== 'quarter' ? 1 : 0);
+  const multi = rounds.length > 1;
+  let head;
+  if (!multi) {
+    head = `<tr><th>Nr.</th><th class="name">Name</th>${finalHeadCells(scale)}</tr>`;
+  } else {
+    const top = rounds.map((rd) => `<th colspan="${k}">${esc(rd.title)}${rd.showRaster ? `<span class="sub">${esc(rd.rasterName)}</span>` : ''}</th>`).join('');
+    head = `<tr><th rowspan="${k > 1 ? 2 : 1}">Nr.</th><th class="name" rowspan="${k > 1 ? 2 : 1}">Name</th>${top}</tr>`;
+    if (k > 1) head += `<tr>${rounds.map(() => finalHeadCells(scale)).join('')}</tr>`;
+  }
+  const first = rounds[0].list;
+  const rows = first.map((x0, i) => `<tr><td>${i + 1}</td><td class="name">${esc(x0.name)}</td>${rounds.map((rd) => finalCells(rd.list[i], scale)).join('')}</tr>`).join('');
+  return { html: `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`, cols: 2 + rounds.length * k };
+}
+
+/** Ein Block je Schüli: eine Zeile je Runde. */
+function studentBlocksHTML(rounds, scale, criteria) {
+  const first = rounds[0].list;
+  const k = (scale !== 'points' ? 1 : 0) + (scale !== 'quarter' ? 1 : 0);
+  const widths = criteria ? [17, 12, null, 9, ...Array(k).fill(8)] : [40, 20, ...Array(k).fill(40 / k)];
+  const colgroup = `<colgroup>${widths.map((w) => (w ? `<col style="width:${w}%">` : '<col>')).join('')}</colgroup>`;
+  const head = `<tr><th class="name">Runde</th><th>Datum</th>${criteria ? '<th class="name">Kriterien</th><th>berechnet</th>' : ''}${finalHeadCells(scale)}</tr>`;
+  return first.map((x0, i) => {
+    const rows = rounds.map((rd) => {
+      const x = rd.list[i];
+      return `<tr><td class="rd">${esc(rd.title)}${rd.showRaster ? `<span class="sub">${esc(rd.rasterName)}</span>` : ''}</td><td>${esc(x.datum)}</td>
+        ${criteria ? `<td class="name crit-text">${esc(criteriaText(rd.raster, x))}</td><td>${esc(x.proposalDecimal)}</td>` : ''}
+        ${finalCells(x, scale)}</tr>`;
+    }).join('');
+    return `<section class="list-block" data-keep="1"><h2>${esc(x0.name)}</h2><table>${colgroup}<thead>${head}</thead><tbody>${rows}</tbody></table></section>`;
+  }).join('');
+}
+
+function listPage({ orientation, meta, blocks, foot }) {
+  const metaSpans = [
+    ['Lerngruppe', meta.group],
+    ['Klasse', meta.klasse],
+    [meta.roundsLabel.includes(',') ? 'Runden' : 'Runde', meta.roundsLabel],
+    ['Raster', meta.rasterLabel],
+    ['Stand', meta.printed],
+  ].filter(([, v]) => v).map(([k, v]) => `<span><b>${k}:</b> ${esc(v)}</span>`).join('');
+  const run = `${meta.title} · ${meta.group} (Fortsetzung)`;
+  return `<div class="page page--${orientation} page--list" data-run="${esc(run)}"><div class="list-sheet">
+    <h1>${esc(meta.title)}</h1>
+    <div class="list-meta">${metaSpans}</div>
+    ${blocks}
+    <div class="list-foot"><p>${foot}</p></div>
+  </div></div>`;
+}
+
+const footText = (scale, extra = '') => `${extra ? `${extra} ` : ''}${scale !== 'quarter' ? 'Punkte = 17 − 3 × Note, gerundet. ' : ''}* = von der Lehrkraft nachgeschärft.`;
+
 /**
- * Seite(n) der Notenliste.
+ * Seite(n) der Notenliste einer Runde mit allen Kriterien.
  * @param {object[]} list Ergebnis von buildGradeList()
  * @param {{title, group, klasse, round, printed, scale, weightsNote, raster}} meta
  */
 export function buildListPages(list, meta) {
   const r = meta.raster;
-  const q = meta.scale !== 'points';
-  const p = meta.scale !== 'quarter';
-  const summe = r.meta.typ !== 'matrix' && r.meta.wertung === 'summe';
-  const n = r.meta.typ === 'matrix' ? 2 : r.kriterien.length;
-  const crit = Array.from({ length: n }, (_, i) => `<th>${esc(critShort(r, i))}</th>`).join('');
-  const head = `<tr><th>Nr.</th><th class="name" style="width:22%">Name</th><th>Datum</th>${crit}${summe ? '<th>Summe</th>' : ''}<th>berechnet</th>${q ? '<th>Endnote</th>' : ''}${p ? '<th>Punkte</th>' : ''}</tr>`;
-  const rows = list.map((x, i) => {
-    const calc = x.proposalDecimal ? `${x.proposalDecimal}${q ? ` (${esc(x.proposalQuarter)})` : ` (${x.proposalPoints} P)`}` : '';
-    const adj = x.adjusted ? '<span class="adj"> *</span>' : '';
-    return `<tr>
-      <td>${i + 1}</td><td class="name">${esc(x.name)}</td><td>${esc(x.datum)}</td>
-      ${x.rowTexts.map((t) => `<td>${esc(t)}</td>`).join('')}
-      ${summe ? `<td>${esc(x.sum)}</td>` : ''}
-      <td>${calc}${x.proposalDecimal && !x.complete ? '<span class="adj"> (unvollst.)</span>' : ''}</td>
-      ${q ? `<td class="list-final">${esc(x.finalQuarter)}${adj}</td>` : ''}
-      ${p ? `<td class="list-final">${x.finalPoints}${q ? '' : adj}</td>` : ''}
-    </tr>`;
-  }).join('');
-  const explain = r.meta.typ === 'matrix'
-    ? 'Zeile/Spalte: gewählte Einschätzungen im Raster; berechnet: Mitte des Notenbereichs der Zelle.'
-    : summe
-      ? `Punkte je Kriterium; Note aus der Summe laut Umrechnungstabelle${meta.weightsNote ? ` (${esc(meta.weightsNote)})` : ''}.`
-      : `Zeilenwerte: Mittelwert der markierten Stufen. Berechnete Note: gewichteter Mittelwert (${esc(meta.weightsNote)}).`;
-  const html = `<div class="page page--portrait page--list"><div class="list-sheet">
-    <h1>${esc(meta.title)}</h1>
-    <div class="list-meta">
-      <span><b>Lerngruppe:</b> ${esc(meta.group)}</span>
-      <span><b>Klasse:</b> ${esc(meta.klasse)}</span>
-      <span><b>Runde:</b> ${esc(meta.round)}</span>
-      <span><b>Raster:</b> ${esc(r.meta.fach)}</span>
-      <span><b>Stand:</b> ${esc(meta.printed)}</span>
-    </div>
-    <table><thead>${head}</thead><tbody>${rows}</tbody></table>
-    <div class="list-foot"><p>${explain} ${p ? 'Punkte = 17 − 3 × Note, gerundet. ' : ''}* = von der Lehrkraft nachgeschärft.</p></div>
-  </div></div>`;
-  return { orientation: 'portrait', pages: [html] };
+  const t = roundTableHTML(list, r, meta.scale);
+  const orientation = t.cols > LIST_PORTRAIT_MAX_COLS ? 'landscape' : 'portrait';
+  return {
+    orientation,
+    pages: [listPage({
+      orientation,
+      meta: { ...meta, roundsLabel: meta.round, rasterLabel: r.meta.fach },
+      blocks: `<section class="list-block">${t.html}</section>`,
+      foot: footText(meta.scale, explainText(r, meta.weightsNote)),
+    })],
+  };
 }
 
 /**
- * Verteilt eine lange Notenliste auf mehrere Seiten: Zeilen, die nicht mehr auf eine
- * Seite passen, wandern auf eine neue Seite mit wiederholtem Tabellenkopf.
+ * Notenliste über eine oder mehrere Runden.
+ * @param {{title: string, raster: object, rasterName: string, weightsNote: string, list: object[]}[]} rounds
+ *   je Runde die Liste aus buildGradeList(), alle mit denselben Schülis in derselben Reihenfolge
+ * @param {{criteria: boolean, arrange: 'klasse'|'schueli', scale: string, title, group, klasse, printed}} opt
  */
-export function paginateLists(root) {
-  let page = root.querySelector('.page--list');
-  let guard = 0;
-  while (page && page.scrollHeight > page.clientHeight + 1 && guard++ < 60) {
-    const next = page.cloneNode(true);
-    const curBody = page.querySelector('tbody');
-    const nextBody = next.querySelector('tbody');
-    nextBody.replaceChildren();
-    const meta = next.querySelector('.list-meta');
-    if (meta) meta.remove();
-    const foot = page.querySelector('.list-foot');
-    if (foot) foot.remove();
-    page.after(next);
-    while (page.scrollHeight > page.clientHeight + 1 && curBody.rows.length > 1) {
-      nextBody.prepend(curBody.rows[curBody.rows.length - 1]);
-    }
-    if (!nextBody.rows.length) next.querySelector('table').remove();
-    page = next;
+export function buildRoundsPages(rounds, opt) {
+  const { scale, criteria, arrange } = opt;
+  const names = [...new Set(rounds.map((rd) => rd.rasterName))];
+  const showRaster = names.length > 1;
+  const rds = rounds.map((rd) => ({ ...rd, showRaster }));
+  const meta = { ...opt, roundsLabel: rds.map((rd) => rd.title).join(', '), rasterLabel: showRaster ? '' : names[0] };
+  let blocks;
+  let cols;
+  let foot;
+  if (arrange === 'schueli' && rds.length > 1) {
+    blocks = studentBlocksHTML(rds, scale, criteria);
+    cols = 2 + (criteria ? 2 : 0) + (scale === 'both' ? 2 : 1);
+    foot = footText(scale, criteria ? 'Kriterien: Zeilenwerte bzw. Punkte je Kriterium; berechnet: Note laut Raster vor dem Nachschärfen.' : '');
+  } else if (criteria) {
+    const tables = rds.map((rd) => ({ rd, t: roundTableHTML(rd.list, rd.raster, scale) }));
+    cols = Math.max(...tables.map((x) => x.t.cols));
+    blocks = tables.map(({ rd, t }) => `<section class="list-block">${rds.length > 1 ? `<h2>${esc(rd.title)}<span class="sub">${esc(rd.rasterName)}</span></h2>` : ''}${t.html}<p class="list-note">${explainText(rd.raster, rd.weightsNote)}</p></section>`).join('');
+    foot = footText(scale);
+  } else {
+    const t = overviewTableHTML(rds, scale);
+    cols = t.cols;
+    blocks = `<section class="list-block">${t.html}</section>`;
+    foot = footText(scale);
   }
+  const orientation = cols > LIST_PORTRAIT_MAX_COLS ? 'landscape' : 'portrait';
+  return { orientation, pages: [listPage({ orientation, meta, blocks, foot })] };
+}
+
+const LIST_FS = 10;
+const LIST_MIN_FS = 6.5;
+
+/** Verkleinert die Schrift der Notenliste, bis jede Tabelle in die Seitenbreite passt. */
+function fitListWidth(page) {
+  const sheet = page.querySelector('.list-sheet');
+  if (!sheet) return true;
+  let fs = LIST_FS;
+  const wide = () => {
+    const w = sheet.getBoundingClientRect().width;
+    return sheet.scrollWidth > sheet.clientWidth + 1 || [...sheet.querySelectorAll('table')].some((t) => t.getBoundingClientRect().width > w + 1);
+  };
+  sheet.style.setProperty('--list-fs', `${fs}pt`);
+  while (wide() && fs > LIST_MIN_FS) {
+    fs -= 0.5;
+    sheet.style.setProperty('--list-fs', `${fs}pt`);
+  }
+  return !wide();
+}
+
+function contentBox(page) {
+  const cs = getComputedStyle(page);
+  const rect = page.getBoundingClientRect();
+  return { top: rect.top + parseFloat(cs.paddingTop), bottom: rect.bottom - parseFloat(cs.paddingBottom) };
+}
+
+/** Neue, leere Folgeseite mit kurzer Kopfzeile. */
+function nextListPage(page, fid) {
+  const next = page.cloneNode(false);
+  next.dataset.flow = fid;
+  const sheet = page.querySelector('.list-sheet').cloneNode(false);
+  next.append(sheet);
+  const run = document.createElement('div');
+  run.className = 'list-run';
+  run.textContent = page.dataset.run || '';
+  sheet.append(run);
+  page.after(next);
+  return next;
+}
+
+/** Entfernt alles, was in einem Block nach der Tabelle steht. */
+function dropAfterTable(table) {
+  let n = table.nextElementSibling;
+  while (n) {
+    const x = n.nextElementSibling;
+    n.remove();
+    n = x;
+  }
+}
+
+/**
+ * Verteilt eine Notenliste auf so viele Seiten wie nötig. Tabellen werden zwischen
+ * Zeilen geteilt (Kopf wird wiederholt), Blöcke je Schüli bleiben möglichst zusammen.
+ * Jede Seite wird so lange nachgeprüft, bis sie passt – auch wenn sich nach dem Teilen
+ * die Spaltenbreiten und damit die Zeilenhöhen ändern.
+ * @returns {boolean} true, wenn alles vollständig auf die Seiten passt
+ */
+function flowList(first, fid) {
+  first.dataset.flow = fid;
+  first.querySelectorAll('.list-block').forEach((x, i) => { x.dataset.bid = String(i); });
+  let page = first;
+  for (let guard = 0; page && guard < 800; guard++) {
+    const sheet = page.querySelector('.list-sheet');
+    const box = contentBox(page);
+    const limit = box.bottom + 0.5;
+    const kids = [...sheet.children];
+    const k = kids.findIndex((c) => c.getBoundingClientRect().bottom > limit);
+    if (k < 0) {
+      const nx = page.nextElementSibling;
+      page = nx && nx.dataset.flow === fid ? nx : null;
+      continue;
+    }
+    const c = kids[k];
+    const hasBlockBefore = kids.slice(0, k).some((x) => x.classList.contains('list-block'));
+    const isBlock = c.classList.contains('list-block');
+    if (!isBlock && !hasBlockBefore) return false;
+    let next = page.nextElementSibling;
+    if (!(next && next.dataset.flow === fid)) next = nextListPage(page, fid);
+    const nsheet = next.querySelector('.list-sheet');
+    const run = nsheet.querySelector(':scope > .list-run');
+    const anchor = run ? run.nextElementSibling : nsheet.firstElementChild;
+    const cont = anchor && isBlock && anchor.dataset.bid === c.dataset.bid ? anchor : null;
+    const rest = kids.slice(k + 1);
+    const insert = (els, before) => els.forEach((e) => nsheet.insertBefore(e, before));
+    if (!isBlock) {
+      insert([c, ...rest], anchor);
+      continue;
+    }
+    const table = c.querySelector('table');
+    const rows = table && table.tBodies[0] ? [...table.tBodies[0].rows] : [];
+    const idx = rows.findIndex((r) => r.getBoundingClientRect().bottom > limit);
+    const freshAvail = box.bottom - box.top - 8 * MM;
+    const keepWhole = c.dataset.keep && hasBlockBefore && c.getBoundingClientRect().height <= freshAvail;
+    if (keepWhole || (idx === 0 && hasBlockBefore)) {
+      if (cont) {
+        // Der Anfang des Blocks rückt zu seiner Fortsetzung auf die nächste Seite
+        cont.querySelector('table').tBodies[0].prepend(...rows);
+        const mark = cont.querySelector('h2 .cont');
+        if (mark) mark.remove();
+        cont.classList.remove('is-cont');
+        c.remove();
+        insert(rest, cont.nextElementSibling);
+      } else {
+        insert([c, ...rest], anchor);
+      }
+    } else if (idx > 0) {
+      const moving = rows.slice(idx);
+      if (cont) {
+        cont.querySelector('table').tBodies[0].prepend(...moving);
+        insert(rest, cont.nextElementSibling);
+      } else {
+        const clone = c.cloneNode(true);
+        clone.classList.add('is-cont');
+        clone.querySelector('table').tBodies[0].replaceChildren(...moving);
+        dropAfterTable(table);
+        const h2 = clone.querySelector('h2');
+        if (h2) h2.insertAdjacentHTML('beforeend', '<span class="sub cont">Fortsetzung</span>');
+        insert([clone, ...rest], anchor);
+      }
+    } else if (idx < 0 && table && table.nextElementSibling) {
+      // Alle Zeilen passen, nur der Text unter der Tabelle nicht
+      const clone = c.cloneNode(true);
+      clone.querySelectorAll('h2, table').forEach((x) => x.remove());
+      dropAfterTable(table);
+      insert([clone, ...rest], anchor);
+    } else {
+      return false; // eine einzelne Zeile ist höher als eine ganze Seite
+    }
+  }
+  return !page;
+}
+
+/**
+ * Bereitet alle Notenlisten in der Vorschau für den Druck vor: Breite anpassen,
+ * auf Seiten verteilen, Seitenzahlen setzen.
+ * @returns {number} Anzahl der Seiten, auf denen trotzdem etwas nicht passt
+ */
+export function layoutLists(root) {
+  const firsts = [...root.querySelectorAll('.page--list')];
+  if (!firsts.length) return 0;
+  let bad = 0;
+  firsts.forEach((page, i) => {
+    if (!fitListWidth(page)) bad++;
+    if (!flowList(page, `list${i}`)) bad++;
+  });
+  const all = [...root.querySelectorAll('.page--list')];
+  if (all.length > 1) {
+    all.forEach((p, i) => {
+      const n = document.createElement('div');
+      n.className = 'list-pageno';
+      n.textContent = `Seite ${i + 1} von ${all.length}`;
+      p.append(n);
+    });
+  }
+  for (const p of all) {
+    const sheet = p.querySelector('.list-sheet');
+    if (p.scrollWidth > p.clientWidth + 1 || p.scrollHeight > p.clientHeight + 1 || sheet.scrollWidth > sheet.clientWidth + 1) bad++;
+  }
+  return bad;
 }
 
 /**
@@ -346,12 +592,13 @@ export function openPrintView({ title, orientation, pages, onClose, hint }) {
   window.scrollTo(0, 0);
 
   pagesBox.style.setProperty('--preview-zoom', '1');
-  paginateLists(pagesBox);
+  const listOverflow = layoutLists(pagesBox);
   const overflow = fitSheets(pagesBox);
   const count = pagesBox.querySelectorAll('.page').length;
   info.textContent = (hint || `${count} ${count === 1 ? 'Seite' : 'Seiten'} · A4 ${orientation === 'landscape' ? 'quer' : 'hoch'}. Im Druckdialog über das Teilen-Symbol „In Dateien sichern“ wählen, um ein PDF zu erhalten.`)
-    + (overflow ? ` Achtung: ${overflow} ${overflow === 1 ? 'Bogen passt' : 'Bögen passen'} nicht vollständig auf den Platz – bitte eine größere Druckform wählen.` : '');
-  if (overflow) info.classList.add('warn');
+    + (overflow ? ` Achtung: ${overflow} ${overflow === 1 ? 'Bogen passt' : 'Bögen passen'} nicht vollständig auf den Platz – bitte eine größere Druckform wählen.` : '')
+    + (listOverflow ? ' Achtung: Die Notenliste passt nicht vollständig auf die Seiten. Bitte weniger Runden oder „Nur Endnote“ wählen.' : '');
+  if (overflow || listOverflow) info.classList.add('warn');
   const pageWidthMM = orientation === 'landscape' ? 297 : 210;
   function onResize() {
     const avail = Math.max(320, window.innerWidth - 24);
