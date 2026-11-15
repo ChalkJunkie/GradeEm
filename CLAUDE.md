@@ -47,6 +47,7 @@ Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf 1 „Tafel“).
 - Die Notenliste darf nie abgeschnitten werden. Bei mehr als 11 Spalten wird sie quer gedruckt, Kriteriennamen und Schülinamen dürfen umbrechen, notfalls wird die Schrift kleiner (bis 6,5 pt). Die Seitenaufteilung (`layoutLists` in `js/print.js`) prüft jede Seite, bis sie passt.
 - Inhalt wählbar: „Mit allen Kriterien“ oder „Nur Endnote“ (für PDF und CSV).
 - Mehrere Runden in einer Liste: „Pro Klasse“ (eine Spalte je Runde bzw. ein Abschnitt je Runde mit Kriterien) oder „Pro Schüli“ (ein Abschnitt je Schüli, eine Zeile je Runde).
+- Kein Durchschnitt über mehrere Runden in der Liste; sie zeigt nur die einzelnen Endnoten.
 
 ## Technische Struktur
 
