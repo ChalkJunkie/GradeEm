@@ -6,12 +6,12 @@ import * as db from './db.js';
 import { describeGrade, formatDecimal } from './grades.js';
 import { analyzeNameText, extractNames, splitName, nameKey, buildCSV } from './csv.js';
 import {
-  buildSheet, buildGradeList, gradeListTable, studentName, compareStudents, todayISO, formatDate, klasseOf, weightsText,
+  buildSheet, buildGradeList, gradeListTable, roundsTable, studentName, compareStudents, todayISO, formatDate, klasseOf, weightsText,
 } from './sheet-data.js';
 import {
   h, icon, toast, openDialog, confirmDialog, promptDialog, offerFile, safeFileName, debounce, uid,
 } from './ui.js';
-import { openPrintView, buildSheetPages, buildListPages } from './print.js';
+import { openPrintView, buildSheetPages, buildListPages, buildRoundsPages } from './print.js';
 import { sheetsToDocxBlob } from './docx-export.js';
 import { parseRaster, hashText, rasterLabel, chooseFachschaftText } from './raster.js';
 import { evaluateRaster, statusOf as rasterStatus, defaultWeights, emptyCrit } from './engine.js';
@@ -19,7 +19,7 @@ import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD, BUILTIN_INDEX, BUILTIN_RASTER 
 import { renderRate, studentGrid as gridOf } from './rate-view.js';
 import { renderRasterLibrary, renderRasterView, renderRasterEditor, rasterSelect } from './raster-ui.js';
 
-export const APP_VERSION = '1.5.0';
+export const APP_VERSION = '1.6.0';
 export const APP_NAME = 'Grade’Em';
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de';
 
@@ -45,6 +45,7 @@ const state = {
   versions: new Map(), // hash → { hash, text, model }
   fsIndex: [], // Verzeichnis der Fachschaftsraster (raster/index.json)
   exportSelection: new Map(), // roundId → Set(studentId)
+  listOptions: new Map(), // groupId → Optionen der Notenliste (Inhalt, Runden, Anordnung)
   navDirection: 0,
 };
 
@@ -1279,37 +1280,95 @@ async function renderExport(g) {
   const sheetsFor = () => chosen().map((s) => buildSheet({ student: s, group: g, round: r, raster, assessment: byStudent.get(s.id), scale }));
   const baseName = safeFileName(`${klasseOf(g) || g.name}_${r.title}`);
   const scaleName = { quarter: 'Viertelnoten', points: 'Notenpunkten', both: 'Viertelnoten und Notenpunkten' }[scale];
-  const listFor = () => buildGradeList({ students: chosen(), group: g, raster, assessmentsByStudent: byStudent, nameOrder: 'last-first' });
+  // --- Notenliste: Inhalt, Runden, Anordnung ---
+  const allRounds = roundsOf(g.id).slice().reverse(); // älteste zuerst
+  let opt = state.listOptions.get(g.id);
+  if (!opt) {
+    opt = { criteria: true, arrange: 'klasse', roundIds: new Set([r.id]) };
+    state.listOptions.set(g.id, opt);
+  }
+  for (const id of [...opt.roundIds]) if (!allRounds.some((x) => x.id === id)) opt.roundIds.delete(id);
+  if (!opt.roundIds.size) opt.roundIds.add(r.id);
+
+  const weightsNoteFor = (x, rr, list) => {
+    if (rr.meta.typ === 'matrix') return '';
+    if (rr.meta.wertung === 'summe') {
+      const u = rr.umrechnungen[groupUmrechnung(g, x.rasterId)] || rr.umrechnungen[0];
+      return u && u.titel ? `Umrechnung: ${u.titel}` : '';
+    }
+    const ws = [...new Set(list.map((y) => weightsText(rr, y.weights)).filter(Boolean))];
+    return `Gewichtung: ${ws.length ? ws.join(' bzw. ') : weightsText(rr, groupWeights(g, rr, x.rasterId))}`;
+  };
+  const roundData = () => allRounds.filter((x) => opt.roundIds.has(x.id)).map((x) => {
+    const rr = roundRaster(x);
+    const map = new Map(chosen().map((s) => [s.id, getAssessment(x.id, s.id)]));
+    const list = buildGradeList({ students: chosen(), group: g, raster: rr, assessmentsByStudent: map, nameOrder: 'last-first' });
+    return { title: x.title, raster: rr, rasterName: roundLabel(x), weightsNote: weightsNoteFor(x, rr, list), list };
+  });
+  const listBaseName = (rd) => (rd.length === 1 ? safeFileName(`${klasseOf(g) || g.name}_${rd[0].title}`) : safeFileName(`${klasseOf(g) || g.name}_${rd.length}_Runden`));
 
   const exportCSV = () => {
     if (!need()) return;
-    const { header, rows } = gradeListTable(listFor(), scale, raster);
+    const rd = roundData();
+    const { header, rows } = rd.length === 1
+      ? gradeListTable(rd[0].list, scale, rd[0].raster, { criteria: opt.criteria })
+      : roundsTable(rd, scale, { criteria: opt.criteria, arrange: opt.arrange });
     const blob = new Blob([buildCSV(header, rows)], { type: 'text/csv;charset=utf-8' });
-    offerFile(blob, `Notenliste_${baseName}.csv`, { title: 'Notenliste (CSV) ist fertig' });
+    offerFile(blob, `Notenliste_${listBaseName(rd)}.csv`, { title: 'Notenliste (CSV) ist fertig' });
   };
   const exportListPDF = () => {
     if (!need()) return;
-    const list = listFor();
-    let weightsNote = '';
-    if (raster.meta.typ !== 'matrix' && raster.meta.wertung === 'summe') {
-      const u = raster.umrechnungen[groupUmrechnung(g, r.rasterId)] || raster.umrechnungen[0];
-      weightsNote = u && u.titel ? `Umrechnung: ${u.titel}` : '';
-    } else if (raster.meta.typ !== 'matrix') {
-      const ws = [...new Set(list.map((x) => weightsText(raster, x.weights)).filter(Boolean))];
-      weightsNote = `Gewichtung: ${ws.length ? ws.join(' bzw. ') : weightsText(raster, groupWeights(g, raster, r.rasterId))}`;
-    }
-    const { orientation, pages } = buildListPages(list, {
-      title: 'Notenliste – mündliche Noten',
-      group: g.name,
-      klasse: klasseOf(g),
-      round: r.title,
-      printed: formatDate(todayISO()),
-      scale,
-      weightsNote,
-      raster,
-    });
+    const rd = roundData();
+    const base = { title: 'Notenliste – mündliche Noten', group: g.name, klasse: klasseOf(g), printed: formatDate(todayISO()), scale };
+    const { orientation, pages } = rd.length === 1 && opt.criteria
+      ? buildListPages(rd[0].list, { ...base, round: rd[0].title, weightsNote: rd[0].weightsNote, raster: rd[0].raster })
+      : buildRoundsPages(rd, { ...base, criteria: opt.criteria, arrange: opt.arrange });
     openPrintView({ title: `Notenliste ${g.name}`, orientation, pages, onClose: render });
   };
+
+  const pickSeg = (options, value, onPick) => {
+    const seg = h('div', { class: 'seg', role: 'group' });
+    for (const [v, label] of options) {
+      seg.append(h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: (e) => {
+        seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        e.currentTarget.setAttribute('aria-pressed', 'true');
+        onPick(v);
+      } }, label));
+    }
+    return seg;
+  };
+  const arrangeField = h('div', { class: 'field' },
+    h('span', null, 'Anordnung bei mehreren Runden'),
+    pickSeg([['klasse', 'Pro Klasse'], ['schueli', 'Pro Schüli']], opt.arrange, (v) => { opt.arrange = v; }),
+    h('p', { class: 'muted small', style: { margin: 0 } }, 'Pro Klasse: eine Tabelle mit einer Spalte je Runde. Pro Schüli: ein Abschnitt je Schüli mit einer Zeile je Runde.'));
+  arrangeField.hidden = opt.roundIds.size < 2;
+  const roundPicks = h('div', { class: 'round-picks' }, allRounds.map((x) => {
+    const cb = h('input', { type: 'checkbox', checked: opt.roundIds.has(x.id) });
+    cb.addEventListener('change', () => {
+      if (cb.checked) opt.roundIds.add(x.id);
+      else if (opt.roundIds.size > 1) opt.roundIds.delete(x.id);
+      else {
+        cb.checked = true;
+        toast('Mindestens eine Runde muss ausgewählt sein.');
+      }
+      arrangeField.hidden = opt.roundIds.size < 2;
+    });
+    return h('label', { class: 'check' }, cb, h('span', null, x.title, x.id === r.id ? h('span', { class: 'muted small' }, ' (aktuell)') : null));
+  }));
+  const listPanel = h('section', { class: 'section panel export-card' },
+    h('h3', null, 'Notenliste'),
+    h('p', null, 'Für deine Unterlagen. Die Auswahl der Schülis oben gilt auch hier.'),
+    h('div', { class: 'list-options' },
+      h('div', { class: 'field' }, h('span', null, 'Inhalt'),
+        pickSeg([['crit', 'Mit allen Kriterien'], ['final', 'Nur Endnote']], opt.criteria ? 'crit' : 'final', (v) => { opt.criteria = v === 'crit'; })),
+      allRounds.length > 1
+        ? h('div', { class: 'field' }, h('span', null, 'Runden'), roundPicks)
+        : h('p', { class: 'muted small', style: { margin: 0 } }, 'Diese Lerngruppe hat bisher eine Runde. Legst du unter „Einrichten“ weitere an, kannst du hier mehrere Runden in einer Liste drucken.'),
+      arrangeField),
+    h('div', { class: 'btn-group' },
+      h('button', { class: 'btn btn--primary', type: 'button', onclick: exportListPDF }, icon('print'), 'PDF / Drucken'),
+      h('button', { class: 'btn', type: 'button', onclick: exportCSV }, icon('file'), 'CSV für Excel')));
+
   const exportSheetsPrint = (perPage) => {
     if (!need()) return;
     const { orientation, pages } = buildSheetPages(sheetsFor(), perPage);
@@ -1359,15 +1418,10 @@ async function renderExport(g) {
           h('button', { class: 'btn', type: 'button', onclick: () => setAll(doneIds) }, 'Nur bewertete'),
           h('button', { class: 'btn', type: 'button', onclick: () => setAll([]) }, 'Keine'))),
       pick),
-    h('p', { class: 'muted small' }, `Raster: ${roundLabel(r)}. Noten erscheinen in ${scaleName} – einstellbar für diese Lerngruppe unter `,
-      h('a', { href: `#/gruppe/${g.id}/einrichten` }, 'Einrichten'), `. Runde: ${r.title}.`),
+    listPanel,
+    h('p', { class: 'muted small' }, `Schülibögen gelten für die aktuelle Runde „${r.title}“ (Raster: ${roundLabel(r)}). Noten erscheinen in ${scaleName} – einstellbar für diese Lerngruppe unter `,
+      h('a', { href: `#/gruppe/${g.id}/einrichten` }, 'Einrichten'), '.'),
     h('div', { class: 'export-grid' },
-      h('section', { class: 'panel export-card' },
-        h('h3', null, 'Notenliste'),
-        h('p', null, 'Name, Werte je Kriterium, berechnete Note, Endnote, Klasse und Datum.'),
-        h('div', { class: 'btn-group' },
-          h('button', { class: 'btn btn--primary', type: 'button', onclick: exportCSV }, icon('file'), 'CSV für Excel'),
-          h('button', { class: 'btn', type: 'button', onclick: exportListPDF }, icon('print'), 'PDF / Drucken'))),
       h('section', { class: 'panel export-card' },
         h('h3', null, 'Schülibögen'),
         h('p', null, 'Ausgefüllter Bogen nach dem Raster, ein Schüli pro Seite (A4 quer).'),

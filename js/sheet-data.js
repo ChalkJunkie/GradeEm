@@ -145,10 +145,40 @@ export function buildGradeList({ students, group, raster, assessmentsByStudent, 
   });
 }
 
+/** Spalten der Endnote je nach Notenskala. */
+export function finalLabels(scale) {
+  const out = [];
+  if (scale !== 'points') out.push('Endnote (Viertelnote)');
+  if (scale !== 'quarter') out.push('Endnote (Punkte)');
+  return out;
+}
+
+/** Werte der Endnote einer Listenzeile passend zu finalLabels(). */
+export function finalValues(x, scale) {
+  const out = [];
+  if (scale !== 'points') out.push(x.finalQuarter);
+  if (scale !== 'quarter') out.push(x.finalPoints);
+  return out;
+}
+
+/** Werte der Kriterien als lesbarer Text, z. B. „Fachwissen 2 · Fachsprache 2,5“. */
+export function criteriaText(raster, x) {
+  const parts = x.rowTexts.map((t, i) => (t ? `${critShort(raster, i)} ${t}` : '')).filter(Boolean);
+  if (x.sum !== '' && x.sum !== undefined) parts.push(`Summe ${x.sum}`);
+  return parts.join(' · ');
+}
+
 /**
- * Kopf und Zeilen für den CSV-Export der Notenliste.
+ * Kopf und Zeilen für den CSV-Export der Notenliste einer Runde.
+ * @param {{criteria?: boolean}} opt criteria=false: nur Name, Klasse und Endnote
  */
-export function gradeListTable(list, scale, raster) {
+export function gradeListTable(list, scale, raster, { criteria = true } = {}) {
+  if (!criteria) {
+    return {
+      header: ['Name', 'Klasse', ...finalLabels(scale), 'Nachgeschärft'],
+      rows: list.map((r) => [r.name, r.klasse, ...finalValues(r, scale), r.adjusted ? 'ja' : 'nein']),
+    };
+  }
   const q = scale !== 'points';
   const p = scale !== 'quarter';
   const n = critCount(raster);
@@ -158,8 +188,7 @@ export function gradeListTable(list, scale, raster) {
   header.push('Berechnete Note (dezimal)');
   if (q) header.push('Berechnete Note (Viertelnote)');
   if (p) header.push('Berechnete Note (Punkte)');
-  if (q) header.push('Endnote (Viertelnote)');
-  if (p) header.push('Endnote (Punkte)');
+  header.push(...finalLabels(scale));
   header.push('Nachgeschärft', 'Vollständig bewertet');
   const rows = list.map((r) => {
     const row = [r.name, r.klasse, r.datum, ...r.rowTexts];
@@ -167,9 +196,60 @@ export function gradeListTable(list, scale, raster) {
     row.push(r.proposalDecimal);
     if (q) row.push(r.proposalQuarter);
     if (p) row.push(r.proposalPoints);
-    if (q) row.push(r.finalQuarter);
-    if (p) row.push(r.finalPoints);
+    row.push(...finalValues(r, scale));
     row.push(r.adjusted ? 'ja' : 'nein', r.complete ? 'ja' : 'nein');
+    return row;
+  });
+  return { header, rows };
+}
+
+/**
+ * CSV-Tabelle über mehrere Runden.
+ * @param {{title: string, raster: object, list: object[]}[]} rounds je Runde die Liste aus
+ *   buildGradeList() – alle Listen enthalten dieselben Schülis in derselben Reihenfolge
+ * @param {{criteria?: boolean, arrange?: 'klasse'|'schueli'}} opt
+ *   klasse: eine Zeile je Schüli, Spalten je Runde; schueli: eine Zeile je Schüli und Runde
+ */
+export function roundsTable(rounds, scale, { criteria = false, arrange = 'klasse' } = {}) {
+  const first = rounds[0] ? rounds[0].list : [];
+  if (arrange === 'schueli') {
+    const header = ['Name', 'Klasse', 'Runde', 'Raster', 'Datum'];
+    if (criteria) header.push('Kriterien', 'Berechnete Note (dezimal)');
+    header.push(...finalLabels(scale), 'Nachgeschärft');
+    const rows = [];
+    first.forEach((_, i) => {
+      for (const rd of rounds) {
+        const x = rd.list[i];
+        const row = [x.name, x.klasse, rd.title, rd.rasterName || '', x.datum];
+        if (criteria) row.push(criteriaText(rd.raster, x), x.proposalDecimal);
+        row.push(...finalValues(x, scale), x.adjusted ? 'ja' : 'nein');
+        rows.push(row);
+      }
+    });
+    return { header, rows };
+  }
+  const header = ['Name', 'Klasse'];
+  for (const rd of rounds) {
+    const t = rd.title;
+    if (criteria) {
+      const n = critCount(rd.raster);
+      header.push(`${t}: Datum`, ...Array.from({ length: n }, (_, i) => `${t}: ${critShort(rd.raster, i)}`));
+      if (rd.raster.meta.typ !== 'matrix' && rd.raster.meta.wertung === 'summe') header.push(`${t}: Summe`);
+      header.push(`${t}: Berechnete Note (dezimal)`);
+    }
+    header.push(...finalLabels(scale).map((l) => `${t}: ${l}`));
+  }
+  const rows = first.map((x0, i) => {
+    const row = [x0.name, x0.klasse];
+    for (const rd of rounds) {
+      const x = rd.list[i];
+      if (criteria) {
+        row.push(x.datum, ...x.rowTexts);
+        if (rd.raster.meta.typ !== 'matrix' && rd.raster.meta.wertung === 'summe') row.push(x.sum);
+        row.push(x.proposalDecimal);
+      }
+      row.push(...finalValues(x, scale));
+    }
     return row;
   });
   return { header, rows };
