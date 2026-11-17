@@ -200,7 +200,7 @@ node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs tests
 npm install docx && node tests/docx-export.test.mjs beispiel.docx
 ```
 
-Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und die Bewertungsarten sowie die Notenliste mit einer oder mehreren Runden (zusammen 43 Tests), der zweite erzeugt eine Beispiel-Word-Datei mit fünf Schülibögen verschiedener Rasterarten.
+Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und die Bewertungsarten sowie die Notenliste mit einer oder mehreren Runden (zusammen 44 Tests), der zweite erzeugt eine Beispiel-Word-Datei mit fünf Schülibögen verschiedener Rasterarten.
 
 **Hinweise zu den Vorlagen** – Die Texte des Rasters sind wortgetreu aus beiden Vorlagen übernommen, einschließlich der Fettungen. Trennstriche, die in der Lehrerversion nur dem Zeilenumbruch dienten („Argumentations-ketten“, „Alternativ-beispiele“, „Notenbildungs-verordnung“), sind als weiche Trennstellen gesetzt und erscheinen nur, wenn dort umbrochen wird.
 
@@ -213,6 +213,8 @@ Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und 
 **Lizenzen** – docx © Dolan, MIT-Lizenz (`vendor/LICENSE-docx.txt`); Atkinson Hyperlegible © Braille Institute of America, SIL Open Font License 1.1 (`vendor/fonts/OFL-Atkinson-Hyperlegible.txt`).
 
 ## Versionen
+
+- **1.6.2** – Schülibögen: Die Kommentarspalte wird nur noch gedruckt, wenn auf dem Bogen ein Kommentar steht (PDF, Mehrfachdruck und Word); ohne Kommentare haben die Beschreibungsspalten die volle Breite. Die Schriftgröße wird je Bogen so gewählt, dass er die Seite möglichst gut füllt: Bögen mit wenig Text werden größer gesetzt, Bögen mit viel Text oder langen Kommentaren kleiner.
 
 - **1.6.1** – Bogenform der Schülibögen pro Lerngruppe wählbar (Export): „Kreuzliste“ oder „Alle Beschreibungen“. Gilt auch für bereits bewertete Runden; Noten und Raster bleiben unverändert.
 

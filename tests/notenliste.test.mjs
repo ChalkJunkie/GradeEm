@@ -72,3 +72,12 @@ test('Bogenform: Wahl der Lerngruppe vor der Angabe im Raster', async () => {
   const s = buildSheet({ student: students[0], group: { klasse: '8b' }, round: { title: 'R' }, raster: bio, assessment: ass(bio, 1), form: 'vollstaendig' });
   assert.equal(s.form, 'vollstaendig');
 });
+
+test('Kommentarspalte nur auf Bögen mit Kommentar', async () => {
+  const { hasComments, buildSheet } = await import('../js/sheet-data.js');
+  const mk = (comments) => buildSheet({ student: students[0], group: { klasse: '8b' }, round: { title: 'R' }, raster: bio, assessment: { crit: bio.kriterien.map((_, i) => ({ sel: [1], pts: {}, comment: comments[i] || '' })), date: '2026-11-15' } });
+  assert.equal(hasComments(mk([])), false);
+  assert.equal(hasComments(mk(['', '   ', ''])), false); // nur Leerzeichen zählt nicht
+  assert.equal(hasComments(mk(['', 'gut', ''])), true);
+  assert.equal(hasComments({ crit: [] }), false);
+});

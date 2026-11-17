@@ -58,7 +58,7 @@ Eine Angabe pro Zeile, immer `Name: Wert`.
 | `quelle` | | Originaldatei, aus der das Raster stammt |
 | `kopfzeile` | | Felder oben auf dem Bogen, getrennt durch `\|`. Standard: `Name \| Klasse \| Datum \| Note`. Name, Klasse, Datum und Note füllt die App aus. |
 | `schuelibogen` | | `vollstaendig` (Standard: alle Beschreibungen) oder `kompakt` (nur beste und schwächste Beschreibung, dazwischen Kreuzspalten) |
-| `kommentarspalte` | | Überschrift einer Kommentarspalte, z. B. `Kommentar` oder `Bemerkungen`. Ohne Angabe stehen Kommentare unter der Tabelle. |
+| `kommentarspalte` | | Überschrift einer Kommentarspalte, z. B. `Kommentar` oder `Bemerkungen`. Ohne Angabe stehen Kommentare unter der Tabelle. Die Spalte wird nur auf Bögen gedruckt, auf denen ein Kommentar steht. |
 | `notendefinitionen` | | `ja` hängt die Notendefinitionen nach §5 Notenbildungsverordnung an |
 | `spalte_kriterien`, `spalte_stufen` | | Beschriftung der Kopfzellen, z. B. `Kriterien`, `Notenbereich` |
 | `einheit` | | Bezeichnung der Punkte bei `wertung: summe`, z. B. `Sterne` |
