@@ -64,6 +64,14 @@ export function rowText(r, ev, i) {
 }
 
 /**
+ * Hat der Bogen mindestens einen Kommentar? Nur dann wird die Kommentarspalte gedruckt;
+ * ohne Kommentare bekommen die Beschreibungsspalten die ganze Breite.
+ */
+export function hasComments(s) {
+  return Array.isArray(s.crit) && s.crit.some((c) => c && String(c.comment || '').trim() !== '');
+}
+
+/**
  * Bogenform eines Schülibogens: 'kompakt' (Kreuzliste mit bester und schwächster
  * Beschreibung) oder 'vollstaendig' (alle Beschreibungen). Matrix-Raster haben eine
  * eigene Form; sonst gilt die Wahl der Lerngruppe, ohne Wahl die Angabe im Raster.

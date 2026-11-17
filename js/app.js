@@ -19,7 +19,7 @@ import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD, BUILTIN_INDEX, BUILTIN_RASTER 
 import { renderRate, studentGrid as gridOf } from './rate-view.js';
 import { renderRasterLibrary, renderRasterView, renderRasterEditor, rasterSelect } from './raster-ui.js';
 
-export const APP_VERSION = '1.6.1';
+export const APP_VERSION = '1.6.2';
 export const APP_NAME = 'Grade’Em';
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de';
 

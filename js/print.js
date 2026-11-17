@@ -19,7 +19,7 @@ import {
 } from './rubric.js';
 import { cellParas, footnoteList } from './raster.js';
 import { pointsOf } from './engine.js';
-import { headerFields, sumText, critShort, criteriaText } from './sheet-data.js';
+import { headerFields, sumText, critShort, criteriaText, hasComments } from './sheet-data.js';
 import { esc, richHTML, h, icon } from './ui.js';
 
 const MM = 96 / 25.4; // CSS-Pixel pro Millimeter
@@ -53,7 +53,7 @@ function headHTML(s) {
 function kompaktTable(s) {
   const r = s.raster;
   const n = r.stufen.length;
-  const commentLabel = r.meta.kommentarspalte;
+  const commentLabel = hasComments(s) ? r.meta.kommentarspalte : ''; // ohne Kommentare keine Spalte
   const marks = r.stufen.map((st) => (r.stufen.some((x) => x.kreuz) ? st.kreuz : st.name));
   const w = commentLabel
     ? [10.83, 22.38, ...marks.map(() => 19.48 / n), 16.25, 31.06]
@@ -75,7 +75,7 @@ function kompaktTable(s) {
 function fullTable(s, { preview = false } = {}) {
   const r = s.raster;
   const n = r.stufen.length;
-  const commentLabel = preview ? '' : r.meta.kommentarspalte;
+  const commentLabel = preview || !hasComments(s) ? '' : r.meta.kommentarspalte;
   const labelW = 14;
   const commentW = commentLabel ? 17 : 0;
   const cellW = (100 - labelW - commentW) / n;
@@ -539,9 +539,17 @@ export function layoutLists(root) {
   return bad;
 }
 
+/** Kleinste und größte Schrift eines Bogens relativ zur Ausgangsgröße (BASE_FS). */
+const FIT_MIN = 0.5;
+const FIT_MAX = 1.25;
+/** Anteil der Bogenhöhe, den der Inhalt höchstens belegt – etwas Luft, falls der Druck minimal abweicht. */
+const FIT_FILL = 0.97;
+
 /**
- * Verkleinert die Schrift eines Bogens schrittweise, bis er in seinen Rahmen passt.
- * @returns {number} Anzahl der Bögen, die auch verkleinert nicht vollständig passen
+ * Wählt für jeden Bogen die größte Schrift, bei der er noch vollständig in seinen
+ * Rahmen passt: Bögen mit wenig Text werden größer gesetzt, Bögen mit viel Text oder
+ * langen Kommentaren kleiner (zwischen 50 % und 125 % der Ausgangsgröße).
+ * @returns {number} Anzahl der Bögen, die auch in der kleinsten Schrift nicht vollständig passen
  */
 export function fitSheets(root) {
   let overflow = 0;
@@ -549,14 +557,33 @@ export function fitSheets(root) {
     const sheet = box.classList.contains('sheet') ? box : box.querySelector('.sheet');
     if (!sheet) return;
     const base = parseFloat(box.dataset.fs) || 10;
-    let fs = base;
-    sheet.style.setProperty('--fs', `${fs}pt`);
-    let guard = 0;
-    while (sheet.scrollHeight > sheet.clientHeight + 1 && fs > base * 0.55 && guard < 50) {
-      fs -= base * 0.025;
+    const min = base * FIT_MIN;
+    const max = base * FIT_MAX;
+    const used = () => {
+      const last = sheet.lastElementChild;
+      return last ? last.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top : 0;
+    };
+    const fits = (fs) => {
       sheet.style.setProperty('--fs', `${fs.toFixed(2)}pt`);
-      guard++;
+      return sheet.scrollHeight <= sheet.clientHeight + 1 && used() <= sheet.clientHeight * FIT_FILL;
+    };
+    let fs;
+    if (fits(max)) {
+      fs = max;
+    } else if (!fits(min)) {
+      fs = min;
+    } else {
+      let lo = min;
+      let hi = max;
+      for (let i = 0; i < 9; i++) {
+        const mid = (lo + hi) / 2;
+        if (fits(mid)) lo = mid;
+        else hi = mid;
+      }
+      fs = Math.max(min, Math.floor(lo * 4) / 4); // auf 0,25 pt abrunden
+      while (fs > min && !fits(fs)) fs -= 0.25;
     }
+    sheet.style.setProperty('--fs', `${fs.toFixed(2)}pt`);
     if (sheet.scrollHeight > sheet.clientHeight + 1) overflow++;
   });
   return overflow;

@@ -13,7 +13,7 @@ import {
 } from './rubric.js';
 import { cellParas, footnoteList } from './raster.js';
 import { pointsOf } from './engine.js';
-import { headerFields, sumText, critShort } from './sheet-data.js';
+import { headerFields, sumText, critShort, hasComments } from './sheet-data.js';
 
 const PAGE_W = 16838;
 const PAGE_H = 11906;
@@ -125,7 +125,7 @@ export function buildSheetsDocument(D, sheets) {
   function kompaktTable(s) {
     const r = s.raster;
     const n = r.stufen.length;
-    const comment = r.meta.kommentarspalte;
+    const comment = hasComments(s) ? r.meta.kommentarspalte : ''; // ohne Kommentare keine Spalte
     const marks = r.stufen.map((st) => (r.stufen.some((x) => x.kreuz) ? st.kreuz : st.name));
     const w = widths(comment ? [10.83, 22.38, ...marks.map(() => 19.48 / n), 16.25, 31.06] : [12, 34, ...marks.map(() => 20 / n), 34]);
     const head = new TableRow({
@@ -157,7 +157,7 @@ export function buildSheetsDocument(D, sheets) {
   function fullTable(s) {
     const r = s.raster;
     const n = r.stufen.length;
-    const comment = r.meta.kommentarspalte;
+    const comment = hasComments(s) ? r.meta.kommentarspalte : ''; // ohne Kommentare keine Spalte
     const cw = (100 - 14 - (comment ? 17 : 0)) / n;
     const w = widths([14, ...r.stufen.map(() => cw), ...(comment ? [17] : [])]);
     const unit = r.meta.einheit || 'P';

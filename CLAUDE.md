@@ -52,6 +52,8 @@ Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf 1 „Tafel“).
 ## Schülibögen
 
 - Die Bogenform („Kreuzliste“ = kompakt oder „Alle Beschreibungen“) ist pro Lerngruppe auf der Export-Seite wählbar (`g.sheetForm`). Ohne Wahl gilt die Angabe `schuelibogen` im Raster. Matrix-Raster haben eine eigene Form. Die Wahl ändert nur die Darstellung, nicht Noten oder Raster.
+- Die Kommentarspalte eines Rasters (`kommentarspalte`) wird je Bogen nur gedruckt, wenn mindestens ein Kommentar vorhanden ist (`hasComments` in `js/sheet-data.js`; PDF, Mehrfachdruck und Word). Ohne Kommentare bekommen die Beschreibungsspalten die volle Breite.
+- Die Schriftgröße der Bögen wird je Bogen angepasst (`fitSheets` in `js/print.js`): die größte Schrift zwischen 50 % und 125 % der Ausgangsgröße, bei der der Bogen mit etwas Luft in seinen Rahmen passt. Word-Dateien haben feste Schriftgröße und fließen über mehrere Seiten.
 
 ## Technische Struktur
 
