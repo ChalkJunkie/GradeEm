@@ -64,9 +64,20 @@ export function rowText(r, ev, i) {
 }
 
 /**
- * Daten für einen ausgefüllten Schülibogen.
+ * Bogenform eines Schülibogens: 'kompakt' (Kreuzliste mit bester und schwächster
+ * Beschreibung) oder 'vollstaendig' (alle Beschreibungen). Matrix-Raster haben eine
+ * eigene Form; sonst gilt die Wahl der Lerngruppe, ohne Wahl die Angabe im Raster.
  */
-export function buildSheet({ student, group, round, raster, assessment, scale = 'quarter' }) {
+export function sheetForm(raster, choice) {
+  if (raster.meta.typ === 'matrix') return 'matrix';
+  return choice === 'kompakt' || choice === 'vollstaendig' ? choice : raster.meta.schuelibogen;
+}
+
+/**
+ * Daten für einen ausgefüllten Schülibogen.
+ * @param {string} [form] gewählte Bogenform ('kompakt'|'vollstaendig'), sonst wie im Raster
+ */
+export function buildSheet({ student, group, round, raster, assessment, scale = 'quarter', form }) {
   const ev = evaluateRaster(raster, assessment);
   const crit = Array.from({ length: critCount(raster) }, (_, i) => {
     const c = assessment && assessment.crit ? assessment.crit[i] : null;
@@ -78,6 +89,7 @@ export function buildSheet({ student, group, round, raster, assessment, scale = 
   });
   return {
     raster,
+    form: sheetForm(raster, form),
     ev,
     crit,
     name: studentName(student, 'first-last'),

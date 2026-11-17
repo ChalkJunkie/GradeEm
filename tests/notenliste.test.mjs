@@ -61,3 +61,14 @@ test('Mehrere Runden pro Schüli: eine Zeile je Schüli und Runde', () => {
   assert.equal(t.rows[0][5], criteriaText(bio, rounds[0].list[0]));
   assert.match(t.rows[0][5], new RegExp(`^${bio.kriterien[0].name} 1`));
 });
+
+test('Bogenform: Wahl der Lerngruppe vor der Angabe im Raster', async () => {
+  const { sheetForm, buildSheet } = await import('../js/sheet-data.js');
+  assert.equal(bio.meta.schuelibogen, 'kompakt');
+  assert.equal(sheetForm(bio), 'kompakt');
+  assert.equal(sheetForm(bio, 'vollstaendig'), 'vollstaendig');
+  assert.equal(sheetForm(bio, 'unsinn'), 'kompakt');
+  assert.equal(sheetForm(load('geschichte.md'), 'kompakt'), 'matrix');
+  const s = buildSheet({ student: students[0], group: { klasse: '8b' }, round: { title: 'R' }, raster: bio, assessment: ass(bio, 1), form: 'vollstaendig' });
+  assert.equal(s.form, 'vollstaendig');
+});

@@ -254,7 +254,7 @@ export function buildSheetsDocument(D, sheets) {
     if (r.einleitung) children.push(...mdParas(r.einleitung, { size: SIZE_SMALL }));
     children.push(headerLine(s));
     if (m.typ === 'matrix') children.push(matrixTable(s));
-    else if (m.schuelibogen === 'kompakt') children.push(kompaktTable(s));
+    else if ((s.form || m.schuelibogen) === 'kompakt') children.push(kompaktTable(s));
     else children.push(fullTable(s));
     if (m.typ !== 'matrix' && m.wertung === 'summe') children.push(new Paragraph({ spacing: { before: 100 }, children: runs(`**${sumText(s)}**`) }));
     if (m.typ === 'matrix' || !m.kommentarspalte) {

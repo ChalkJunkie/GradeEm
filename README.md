@@ -85,6 +85,7 @@ Alle Daten liegen nur im Speicher dieser App auf dem iPad. Wird die App gelösch
 
 **Exportieren** (Übersicht → Export) – erst Personen auswählen (alle, nur bewertete oder einzeln), dann:
 
+- **Bogenform:** Bei Rastern mit Stufen wählst du auf der Export-Seite, ob die Schülibögen als **Kreuzliste** (beste und schwächste Beschreibung, dazwischen Kreuze) oder mit **allen Beschreibungen** erscheinen. Vorausgewählt ist die Form aus dem Raster; deine Wahl gilt für die ganze Lerngruppe, auch für schon bewertete Runden.
 - **Notenliste:** PDF/Drucken oder CSV für Excel (UTF-8 mit BOM, Semikolon). Wählbar ist der **Inhalt** („Mit allen Kriterien“ oder „Nur Endnote“) und welche **Runden** auf die Liste kommen. Bei mehreren Runden gibt es zwei Anordnungen: **Pro Klasse** (eine Tabelle, eine Spalte je Runde) und **Pro Schüli** (ein Abschnitt je Schüli, eine Zeile je Runde). Die Liste wird nie abgeschnitten: Bei vielen Spalten wird sie quer gedruckt, lange Kriteriennamen brechen um, und sie verteilt sich auf so viele Seiten wie nötig (mit Seitenzahlen).
 - **Schülibögen:** ein Schüli pro Seite, A4 quer – als PDF/Drucken oder als **Word-Datei (.docx)**. Der Bogen richtet sich nach dem Raster: **kompakt** mit Kreuzspalten (z. B. Biologie), **vollständig** mit allen Beschreibungen und markierter Auswahl, oder als **Matrix** mit markierter Zelle. Einleitung, Hinweise, Fußnoten, Freitextfelder und Notendefinitionen erscheinen, wenn das Raster sie enthält.
 - **Mehrfachdruck:** 2 Bögen pro A4-Seite (A5, vollständig) oder 4 pro Seite (Kompaktfassung ohne Notendefinitionen, damit die Schrift lesbar bleibt), jeweils mit Schnittlinien.
@@ -199,7 +200,7 @@ node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs tests
 npm install docx && node tests/docx-export.test.mjs beispiel.docx
 ```
 
-Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und die Bewertungsarten sowie die Notenliste mit einer oder mehreren Runden (zusammen 42 Tests), der zweite erzeugt eine Beispiel-Word-Datei mit fünf Schülibögen verschiedener Rasterarten.
+Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und die Bewertungsarten sowie die Notenliste mit einer oder mehreren Runden (zusammen 43 Tests), der zweite erzeugt eine Beispiel-Word-Datei mit fünf Schülibögen verschiedener Rasterarten.
 
 **Hinweise zu den Vorlagen** – Die Texte des Rasters sind wortgetreu aus beiden Vorlagen übernommen, einschließlich der Fettungen. Trennstriche, die in der Lehrerversion nur dem Zeilenumbruch dienten („Argumentations-ketten“, „Alternativ-beispiele“, „Notenbildungs-verordnung“), sind als weiche Trennstellen gesetzt und erscheinen nur, wenn dort umbrochen wird.
 
@@ -212,6 +213,8 @@ Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und 
 **Lizenzen** – docx © Dolan, MIT-Lizenz (`vendor/LICENSE-docx.txt`); Atkinson Hyperlegible © Braille Institute of America, SIL Open Font License 1.1 (`vendor/fonts/OFL-Atkinson-Hyperlegible.txt`).
 
 ## Versionen
+
+- **1.6.1** – Bogenform der Schülibögen pro Lerngruppe wählbar (Export): „Kreuzliste“ oder „Alle Beschreibungen“. Gilt auch für bereits bewertete Runden; Noten und Raster bleiben unverändert.
 
 - **1.6.0** – Notenliste: wird nie mehr abgeschnitten (bei vielen Kriterien quer, Spaltenköpfe brechen um, Seitenzahlen). Inhalt wählbar: „Mit allen Kriterien“ oder „Nur Endnote“. Mehrere Runden in einer Liste, wahlweise pro Klasse oder pro Schüli – als PDF und als CSV.
 
