@@ -2,7 +2,9 @@
  * Grade’Em – Aufbereitung der Daten für Schülibögen und Notenliste.
  * Wird von Druckansicht, Word-Export und CSV-Export gemeinsam genutzt.
  */
-import { describeGrade, formatDecimal, normalizeWeights } from './grades.js';
+import {
+  describeGrade, formatDecimal, normalizeWeights, roundToQuarter, noteToPoints, pointsToNote, pointsTendency,
+} from './grades.js';
 import { evaluateRaster, critCount } from './engine.js';
 
 /** Name in der gewünschten Reihenfolge. */
@@ -163,6 +165,31 @@ export function buildGradeList({ students, group, raster, assessmentsByStudent, 
       weights: a && Array.isArray(a.weights) ? a.weights : null,
     };
   });
+}
+
+/** Schreibweisen für das Übertragen der Endnote in eine andere Notenverwaltung (z. B. TeacherTool). */
+export const TRANSFER_NOTATIONS = [['dezimal', 'Dezimal'], ['tendenz', 'Tendenz'], ['punkte', 'Notenpunkte']];
+
+/**
+ * Endnote für das Abtippen in einer anderen App.
+ * Die Endnote ist die Note, die auch auf dem Schülibogen steht: bei der Skala
+ * „Notenpunkte“ der Punktwert, sonst die Viertelnote.
+ *  • dezimal: exakt, z. B. 1-2 → „1,5“
+ *  • tendenz: nächste Tendenz der Noten 1+ … 6 (15 P ≙ 1+ … 0 P ≙ 6); Zwischenwerte wie 1-2
+ *    werden zugunsten der Schülis gerundet (→ 1-)
+ *  • punkte: Notenpunkte 15 … 0
+ * @returns {{main: string, base: string, source: string}|null} null ohne Endnote;
+ *   base = Endnote als Zahl (Schlüssel, um spätere Änderungen zu erkennen), source = Schreibweise in Grade’Em
+ */
+export function transferGrade(effective, notation, scale = 'quarter') {
+  if (typeof effective !== 'number' || !Number.isFinite(effective)) return null;
+  const base = scale === 'points' ? pointsToNote(noteToPoints(effective)) : roundToQuarter(effective);
+  const points = noteToPoints(base);
+  let main;
+  if (notation === 'tendenz') main = pointsTendency(points);
+  else if (notation === 'punkte') main = String(points);
+  else main = formatDecimal(base, 2, true);
+  return { main, base: base.toFixed(3), source: describeGrade(effective, scale).short };
 }
 
 /** Spalten der Endnote je nach Notenskala. */

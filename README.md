@@ -85,6 +85,7 @@ Alle Daten liegen nur im Speicher dieser App auf dem iPad. Wird die App gelösch
 
 **Exportieren** (Übersicht → Export) – erst Personen auswählen (alle, nur bewertete oder einzeln), dann:
 
+- **In andere App übertragen (z. B. TeacherTool):** Ein Import von Noten ist in TeacherTool 7 nicht vorgesehen (der CSV-Import kennt nur Personendaten). Die **Übertragungsansicht** zeigt die Endnoten einer Runde groß und in der Reihenfolge der Schülerliste, damit du sie dort schnell eintippen kannst, auf dem iPad im Split View nebeneinander. Wählbar sind die Schreibweise (**Dezimal**, z. B. 1,75; **Tendenz**, z. B. 2+; **Notenpunkte**) und die Reihenfolge (nach Nachname oder Vorname). Ein Tipp auf eine Zeile hakt sie als übertragen ab; die Haken bleiben auf dem Gerät erhalten. Ändert sich eine Note nach dem Abhaken, wird die Zeile gelb markiert.
 - **Bogenform:** Bei Rastern mit Stufen wählst du auf der Export-Seite, ob die Schülibögen als **Kreuzliste** (beste und schwächste Beschreibung, dazwischen Kreuze) oder mit **allen Beschreibungen** erscheinen. Vorausgewählt ist die Form aus dem Raster; deine Wahl gilt für die ganze Lerngruppe, auch für schon bewertete Runden.
 - **Notenliste:** PDF/Drucken oder CSV für Excel (UTF-8 mit BOM, Semikolon). Wählbar ist der **Inhalt** („Mit allen Kriterien“ oder „Nur Endnote“) und welche **Runden** auf die Liste kommen. Bei mehreren Runden gibt es zwei Anordnungen: **Pro Klasse** (eine Tabelle, eine Spalte je Runde) und **Pro Schüli** (ein Abschnitt je Schüli, eine Zeile je Runde). Die Liste wird nie abgeschnitten: Bei vielen Spalten wird sie quer gedruckt, lange Kriteriennamen brechen um, und sie verteilt sich auf so viele Seiten wie nötig (mit Seitenzahlen).
 - **Schülibögen:** ein Schüli pro Seite, A4 quer – als PDF/Drucken oder als **Word-Datei (.docx)**. Der Bogen richtet sich nach dem Raster: **kompakt** mit Kreuzspalten (z. B. Biologie), **vollständig** mit allen Beschreibungen und markierter Auswahl, oder als **Matrix** mit markierter Zelle. Einleitung, Hinweise, Fußnoten, Freitextfelder und Notendefinitionen erscheinen, wenn das Raster sie enthält.
@@ -167,6 +168,7 @@ js/rubric.js          Rastertexte (wortgetreu, **fett** markiert)
 js/csv.js             CSV-/Listen-Import und CSV-Export
 js/db.js              lokale Datenbank (IndexedDB)
 js/sheet-data.js      Aufbereitung für Bögen und Notenliste
+js/transfer-view.js    Übertragungsansicht (Endnoten zum Abtippen in anderen Apps)
 js/print.js           Druckansichten (1, 2, 4 Bögen pro Seite; Notenliste; Rasterübersicht)
 js/raster.js          Raster einlesen, prüfen und schreiben (Markdown ↔ Modell)
 js/engine.js          Berechnung für alle Rasterarten (Mittelwert, Punktsumme, Matrix)
@@ -196,11 +198,11 @@ tests/                automatische Tests
 **Tests** (am Computer mit Node.js 18 oder neuer, im Ordner `gradeem`):
 
 ```
-node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs tests/notenliste.test.mjs
+node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs tests/notenliste.test.mjs tests/uebertragen.test.mjs
 npm install docx && node tests/docx-export.test.mjs beispiel.docx
 ```
 
-Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und die Bewertungsarten sowie die Notenliste mit einer oder mehreren Runden (zusammen 44 Tests), der zweite erzeugt eine Beispiel-Word-Datei mit fünf Schülibögen verschiedener Rasterarten.
+Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und die Bewertungsarten sowie die Notenliste mit einer oder mehreren Runden (zusammen 51 Tests), der zweite erzeugt eine Beispiel-Word-Datei mit fünf Schülibögen verschiedener Rasterarten.
 
 **Hinweise zu den Vorlagen** – Die Texte des Rasters sind wortgetreu aus beiden Vorlagen übernommen, einschließlich der Fettungen. Trennstriche, die in der Lehrerversion nur dem Zeilenumbruch dienten („Argumentations-ketten“, „Alternativ-beispiele“, „Notenbildungs-verordnung“), sind als weiche Trennstellen gesetzt und erscheinen nur, wenn dort umbrochen wird.
 
@@ -213,6 +215,8 @@ Der erste Befehl prüft Notenumrechnung und CSV-Import/-Export, alle Raster und 
 **Lizenzen** – docx © Dolan, MIT-Lizenz (`vendor/LICENSE-docx.txt`); Atkinson Hyperlegible © Braille Institute of America, SIL Open Font License 1.1 (`vendor/fonts/OFL-Atkinson-Hyperlegible.txt`).
 
 ## Versionen
+
+- **1.7.0** – Neue Übertragungsansicht im Reiter „Export“: Endnoten einer Runde groß und abhakbar, in Dezimal, Tendenz oder Notenpunkten, zum Eintippen in andere Apps wie TeacherTool.
 
 - **1.6.2** – Schülibögen: Die Kommentarspalte wird nur noch gedruckt, wenn auf dem Bogen ein Kommentar steht (PDF, Mehrfachdruck und Word); ohne Kommentare haben die Beschreibungsspalten die volle Breite. Die Schriftgröße wird je Bogen so gewählt, dass er die Seite möglichst gut füllt: Bögen mit wenig Text werden größer gesetzt, Bögen mit viel Text oder langen Kommentaren kleiner.
 

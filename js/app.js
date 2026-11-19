@@ -18,8 +18,9 @@ import { evaluateRaster, statusOf as rasterStatus, defaultWeights, emptyCrit } f
 import { BIOLOGIE_ID, BIOLOGIE_FILE, BIOLOGIE_MD, BUILTIN_INDEX, BUILTIN_RASTER } from './raster-builtin.js';
 import { renderRate, studentGrid as gridOf } from './rate-view.js';
 import { renderRasterLibrary, renderRasterView, renderRasterEditor, rasterSelect } from './raster-ui.js';
+import { renderTransfer } from './transfer-view.js';
 
-export const APP_VERSION = '1.6.2';
+export const APP_VERSION = '1.7.0';
 export const APP_NAME = 'Grade’Em';
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de';
 
@@ -449,6 +450,7 @@ async function render() {
       if (c === 'einrichten') return await renderGroupSetup(g);
       if (c === 'namen') return go(`gruppe/${g.id}/${d === 'raster' ? 'einrichten' : 'schuelis'}`, { replace: true }); // alte Adresse
       if (c === 'export') return await renderExport(g);
+      if (c === 'uebertragen') return await renderTransfer(ctx, g);
       if (c === 'bewerten' && d) return await renderRate(ctx, g, d);
     }
     go('', { replace: true });
@@ -1440,6 +1442,11 @@ async function renderExport(g) {
           h('button', { class: 'btn btn--primary', type: 'button', onclick: () => exportSheetsPrint(1) }, icon('print'), 'PDF / Drucken'),
           h('button', { class: 'btn', type: 'button', onclick: (e) => exportDocx(e.currentTarget) }, icon('file'), 'Word (.docx)'))),
       h('section', { class: 'panel export-card' },
+        h('h3', null, 'In andere App übertragen'),
+        h('p', null, 'Endnoten groß und abhakbar, z. B. zum Eintippen in TeacherTool.'),
+        h('div', { class: 'btn-group' },
+          h('a', { class: 'btn btn--primary', href: `#/gruppe/${g.id}/uebertragen` }, icon('next'), 'Übertragungsansicht'))),
+      h('section', { class: 'panel export-card' },
         h('h3', null, 'Mehrfachdruck'),
         h('p', null, 'Verkleinerte Bögen mit Schnittlinien, z. B. zum Anheften an eine Klassenarbeit.'),
         multiSeg,
@@ -1679,6 +1686,10 @@ const ctx = {
   view,
   viewBare,
   topbar,
+  groupHead,
+  roundsOf,
+  saveGroup,
+  statusFor,
   setCleanup: (fn) => { cleanupView = fn; },
   getAssessment,
   saveAssessment,
