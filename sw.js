@@ -2,7 +2,7 @@
    Legt alle App-Dateien beim ersten Aufruf im Cache ab; danach läuft die App
    vollständig offline. Bei einer neuen Version CACHE_VERSION erhöhen. */
 
-const CACHE_VERSION = 'gradeem-v1.6.2';
+const CACHE_VERSION = 'gradeem-v1.7.0';
 
 const APP_FILES = [
   './',
@@ -23,6 +23,7 @@ const APP_FILES = [
   './js/raster-builtin.js',
   './js/rate-view.js',
   './js/raster-ui.js',
+  './js/transfer-view.js',
   './vendor/docx.min.js',
   './vendor/fonts/atkinson-hyperlegible-latin-400-normal.woff2',
   './vendor/fonts/atkinson-hyperlegible-latin-700-normal.woff2',

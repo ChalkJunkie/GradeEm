@@ -55,15 +55,22 @@ Mockups: Design-Leinwand „Grade'Em Redesign“ (Entwurf 1 „Tafel“).
 - Die Kommentarspalte eines Rasters (`kommentarspalte`) wird je Bogen nur gedruckt, wenn mindestens ein Kommentar vorhanden ist (`hasComments` in `js/sheet-data.js`; PDF, Mehrfachdruck und Word). Ohne Kommentare bekommen die Beschreibungsspalten die volle Breite.
 - Die Schriftgröße der Bögen wird je Bogen angepasst (`fitSheets` in `js/print.js`): die größte Schrift zwischen 50 % und 125 % der Ausgangsgröße, bei der der Bogen mit etwas Luft in seinen Rahmen passt. Word-Dateien haben feste Schriftgröße und fließen über mehrere Seiten.
 
+## Übertragung in TeacherTool (umgesetzt in Version 1.7.0)
+
+- TeacherTool 7 (Complete) kann keine Noten importieren: Der CSV-Import liest nur Personendaten, der CSV-Export ist ausdrücklich nicht wieder importierbar (Handbuch S. 44–46 und 91). Die Noten müssen dort von Hand eingetragen werden.
+- Deshalb gibt es im Reiter „Export“ die Übertragungsansicht (`js/transfer-view.js`, Adresse `#/gruppe/<id>/uebertragen`): Endnoten groß, abhakbar, in Dezimal, Tendenz (1+ … 6, wie TeacherTool „Noten 1–6 mit Tendenzen“) oder Notenpunkten; Reihenfolge nach Nachname oder Vorname.
+- Die Haken liegen je Runde im `localStorage` (nur Schüli-ID und Endnote, keine Namen). Ändert sich die Note nach dem Abhaken, wird die Zeile markiert.
+- Eine Schüli-CSV (nur Vor- und Nachname) zum Anlegen von Kursen in TeacherTool wäre der einzige Teil, den der TeacherTool-CSV-Import kann; sie ist bisher nicht gebaut.
+
 ## Technische Struktur
 
 - Kein Build-Schritt: `index.html`, `css/app.css` und ES-Module in `js/`. Veröffentlicht wird über GitHub Pages aus dem Branch `main` (Datei `.nojekyll` muss vorhanden sein).
-- `js/app.js`: Zustand, Navigation (Adressen `#/…`), Startseite, Lerngruppe (Reiter), Export, Einstellungen. `js/rate-view.js`: Bewerten. `js/raster-ui.js`: Raster-Übersicht und Editor. `js/ui.js`: kleine UI-Hilfen und Symbole.
+- `js/app.js`: Zustand, Navigation (Adressen `#/…`), Startseite, Lerngruppe (Reiter), Export, Einstellungen. `js/rate-view.js`: Bewerten. `js/raster-ui.js`: Raster-Übersicht und Editor. `js/ui.js`: kleine UI-Hilfen und Symbole. `js/transfer-view.js`: Übertragungsansicht.
 - Farben stehen als CSS-Variablen am Anfang von `css/app.css` (hell und dunkel); die Stile für Navigation, Reiter und Karten stehen am Ende der Datei.
 - Raster: eine Markdown-Datei pro Raster in `raster/` (Format in `raster/FORMAT.md`), Verzeichnis in `raster/index.json`, eingebaute Kopie in `js/raster-builtin.js`. Ein neues Raster muss an allen drei Stellen eingetragen werden.
 - Daten der Lehrkraft liegen nur im Browser (IndexedDB, `js/db.js`).
 - Bei einer neuen Version die Nummer an drei Stellen ändern: `APP_VERSION` in `js/app.js`, `CACHE_VERSION` in `sw.js`, Abschnitt „Versionen“ in `README.md`.
-- Tests: `node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs tests/notenliste.test.mjs`.
+- Tests: `node --test tests/grades.test.mjs tests/csv.test.mjs tests/raster.test.mjs tests/notenliste.test.mjs tests/uebertragen.test.mjs`.
 
 ## Arbeitsweise
 

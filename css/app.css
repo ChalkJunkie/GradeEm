@@ -2642,3 +2642,115 @@ a {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.2 4.2L19 7' fill='none' stroke='%23f2f4f1' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
 }
+
+/* ---------- Übertragungsansicht ---------- */
+
+.transfer-opts .field:last-child {
+  margin-bottom: 0;
+}
+
+.transfer-opts .seg {
+  display: inline-flex;
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.transfer-bar {
+  margin: 0 0 10px;
+}
+
+.transfer-progress {
+  margin: 0;
+  font-weight: 700;
+}
+
+.transfer-list {
+  display: grid;
+  gap: 8px;
+}
+
+.transfer-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  min-height: 68px;
+  padding: 8px 18px 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.transfer-row__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--stain-ink);
+}
+
+.transfer-row__check svg {
+  width: 18px;
+  height: 18px;
+}
+
+.transfer-row__name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 19px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.transfer-row__name small {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.transfer-row__grade {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.transfer-row.is-done {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.transfer-row.is-done .transfer-row__check {
+  background: var(--moss);
+  border-color: var(--moss);
+}
+
+.transfer-row.is-done .transfer-row__grade {
+  font-weight: 400;
+}
+
+.transfer-row.is-changed {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.transfer-row.is-changed .transfer-row__name small {
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.transfer-row.is-open {
+  opacity: 0.6;
+}
+
+.transfer-row.is-open .transfer-row__check {
+  border-style: dashed;
+}
